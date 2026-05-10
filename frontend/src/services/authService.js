@@ -19,6 +19,10 @@ const authRefreshToken = async () => {
 const authLogout = async () => {
   return await api.post(`auth/logout`);
 };
+const authGitHub = async () =>{
+  const res = await api.get(`auth/github`);
+  return res.data;
+}
 
 const authService = {
   authRegister,
@@ -26,5 +30,6 @@ const authService = {
   authMe,
   authRefreshToken,
   authLogout,
+  authGitHub,
 };
 export default authService;

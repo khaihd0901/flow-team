@@ -1,17 +1,6 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
-    username:{
-        type: String,
-        required: true,
-        unique: true,
-        trim: true,
-        lowercase: true
-    },
-    hashedPassword: {
-        type: String,
-        required: true
-    },
     email: {
         type: String,
         required: true,
@@ -19,13 +8,22 @@ const userSchema = new mongoose.Schema({
         trim: true,
         lowercase: true
     },
+    username: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    hashedPassword: {
+        type: String,
+        required: false
+    },
     firstName:{
         type: String,
-        required: true
+        required: false
     },
     lastName: {
         type: String,
-        required: true
+        required: false
     },
     fullName: {
         type: String,
@@ -47,7 +45,13 @@ const userSchema = new mongoose.Schema({
     isAdmin:{
         type: Boolean,
         default: false
-    }
+    },
+    providers: [
+  {
+    type: { type: String }, // "github", "google"
+    providerId: String
+  }
+]
 },{
     timeseries: true
 })

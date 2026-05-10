@@ -135,6 +135,15 @@ export const useAuthStore = create()(
           toast.error("Something Went Wrong When Logout");
         }
       },
+      authGitHub: async () =>{
+        try {
+          const res = await authService.authGitHub();
+          window.location.href = res.url;
+        } catch (err) {
+          console.log(err);
+          toast.error("Something Went Wrong When Login With GitHub");
+        }
+      }
     }),
     {
       name: "auth-storage",
