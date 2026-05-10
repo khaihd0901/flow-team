@@ -1,9 +1,10 @@
 import express from 'express';
-import { login, logout, refreshToken, register } from '../Controllers/authController.js';
+import { login, logout, refreshToken, register,authGitHub,authGithubCallback } from '../Controllers/authController.js';
 
 const router = express.Router();
 
-
+router.get('/github',authGitHub)
+router.get('/github/callback',authGithubCallback)
 router.post('/register', register)
 router.post('/login', login)
 router.post('/logout', logout)
