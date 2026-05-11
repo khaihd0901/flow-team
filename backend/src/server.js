@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 
 import { connectDB } from "./Libs/DB.js";
+import { errorHandler } from "./Middlewares/errorMiddleware.js";
 import authRoute from "./Routes/authRoute.js"
 import userRoute from "./Routes/userRoute.js"
 
@@ -13,6 +14,7 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 //middlewares
+
 app.use(express.json());
 app.use(cookieParser());
 app.use(
@@ -22,11 +24,15 @@ app.use(
   })
 );
 
+
+
 //Public Route
 app.use('/api/auth', authRoute)
 //PrivateRoute
 app.use('/api/user', userRoute)
 
+
+app.use(errorHandler);
 
 connectDB().then(() => {
   app.listen(PORT, () => {
