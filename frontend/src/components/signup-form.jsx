@@ -338,11 +338,37 @@ export function SignupForm({ className, ...props }) {
 
               {/* Social Login */}
               <Field className="grid grid-cols-2 gap-4">
-                <Button variant="outline" type="button">
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() =>
+                    (window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`)
+                  }
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path
+                      d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"
+                      fill="currentColor"
+                    />
+                  </svg>
                   Google
                 </Button>
 
-                <Button variant="outline" type="button" onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/github`}>
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() =>
+                    (window.location.href = `${import.meta.env.VITE_API_URL}/auth/github`)
+                  }
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="h-5 w-5"
+                  >
+                    <path d="M12 .5C5.73.5.75 5.62.75 12.1c0 5.18 3.44 9.57 8.2 11.13.6.12.82-.27.82-.58v-2.1c-3.34.75-4.04-1.65-4.04-1.65-.55-1.44-1.35-1.82-1.35-1.82-1.1-.77.08-.75.08-.75 1.22.09 1.86 1.3 1.86 1.3 1.08 1.9 2.82 1.35 3.5 1.03.1-.8.42-1.35.76-1.66-2.66-.31-5.46-1.37-5.46-6.08 0-1.34.46-2.44 1.23-3.3-.12-.31-.54-1.56.12-3.25 0 0 1-.33 3.3 1.26a11.2 11.2 0 0 1 3-.42c1.02 0 2.04.14 3 .42 2.3-1.59 3.3-1.26 3.3-1.26.66 1.69.24 2.94.12 3.25.77.86 1.23 1.96 1.23 3.3 0 4.72-2.8 5.76-5.47 6.07.43.38.82 1.12.82 2.26v3.35c0 .31.22.7.83.58 4.76-1.56 8.2-5.95 8.2-11.13C23.25 5.62 18.27.5 12 .5z" />
+                  </svg>
                   GitHub
                 </Button>
               </Field>
