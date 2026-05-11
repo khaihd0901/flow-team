@@ -5,6 +5,7 @@ import MainBoard from "./pages/MainBoard";
 import Layout from "./components/Layout/Layout";
 import { Toaster } from "sonner";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ForgotPassword from "./pages/ForgotPassword";
 function App() {
   return (
     <>
@@ -14,6 +15,8 @@ function App() {
           {/* PUBLIC */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/reset-password" element={<ForgotPassword />} />
+          
 
           {/* PRIVATE */}
           <Route element={<ProtectedRoute />}>

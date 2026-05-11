@@ -4,6 +4,8 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import axios from "axios";
 import Session from "../models/Session.js";
+import asyncHandler from "express-async-handler";
+
 
 const ACCESS_TOKEN_TTL = "15m";
 const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000; // 14 days
@@ -34,7 +36,7 @@ const createAuthTokens = async (user, res) => {
 };
 
 //REGISTER
-export const register = async (req, res) => {
+export const register = asyncHandler(async (req, res) => {
   try {
     const { username, email, password, confirmPassword, firstName, lastName } =
       req.body;
@@ -80,10 +82,10 @@ export const register = async (req, res) => {
     console.log(err);
     return res.status(500).json({ message: "Internal Server Error !!!" });
   }
-};
+});
 
 //LOGIN
-export const login = async (req, res) => {
+export const login = asyncHandler(async (req, res) => {
   try {
     const { identifier, password } = req.body;
     if (!identifier || !password) {
@@ -112,10 +114,10 @@ export const login = async (req, res) => {
     console.log(err);
     res.status(500).json({ message: "Internal Server Error" });
   }
-};
+});
 
 //LOGOUT
-export const logout = async (req, res) => {
+export const logout = asyncHandler(async (req, res) => {
   try {
     const token = req.cookies?.refreshToken;
     if (!token) {
@@ -128,10 +130,10 @@ export const logout = async (req, res) => {
     (console.log(err),
       res.status(500).json({ message: "Internal Server Error" }));
   }
-};
+});
 
 //REFRESH TOKEN
-export const refreshToken = async (req, res) => {
+export const refreshToken = asyncHandler(async (req, res) => {
   try {
     const token = req.cookies?.refreshToken;
     if (!token) {
@@ -153,10 +155,10 @@ export const refreshToken = async (req, res) => {
     (console.log(err),
       res.status(500).json({ message: "Internal Server Error" }));
   }
-};
+});
 
 //GITHUB OAUTH
-export const authGitHub = async (req, res) => {
+export const authGitHub = asyncHandler(async (req, res) => {
   try {
     const redirectUri = "http://localhost:5001/api/auth/github/callback";
     const clientId = process.env.GITHUB_CLIENT_ID;
@@ -171,9 +173,9 @@ export const authGitHub = async (req, res) => {
     console.log(err);
     res.status(500).json({ message: "Internal Server Error" });
   }
-};
+});
 
-export const authGithubCallback = async (req, res) => {
+export const authGithubCallback = asyncHandler(async (req, res) => {
   const code = req.query.code;
 
   try {
@@ -278,11 +280,11 @@ if (user) {
     console.error(err);
     res.status(500).send("GitHub Auth failed");
   }
-};
+});
 
 
 //GOOGLE OAUTH
-export const authGoogle = async (req, res) => {
+export const authGoogle = asyncHandler(async (req, res) => {
   try {
     const redirectUri = process.env.GOOGLE_CALLBACK_URL || "http://localhost:5001/api/auth/google/callback";
     const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -297,9 +299,9 @@ export const authGoogle = async (req, res) => {
     console.log(err);
     res.status(500).json({ message: "Internal Server Error" });
   }
-};
+});
 
-export const authGoogleCallback = async (req, res) => {
+export const authGoogleCallback = asyncHandler(async (req, res) => {
   try {
     const code = req.query.code;
 
@@ -416,4 +418,4 @@ export const authGoogleCallback = async (req, res) => {
       error: err.message,
     });
   }
-};
+});
