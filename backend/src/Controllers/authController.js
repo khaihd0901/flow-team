@@ -36,9 +36,17 @@ const createAuthTokens = async (user, res) => {
 //REGISTER
 export const register = async (req, res) => {
   try {
-    const { username, email, password, confirmPassword, firstName, lastName } = req.body;
+    const { username, email, password, confirmPassword, firstName, lastName } =
+      req.body;
 
-    if (!username || !email || !password || !confirmPassword || !firstName || !lastName) {
+    if (
+      !username ||
+      !email ||
+      !password ||
+      !confirmPassword ||
+      !firstName ||
+      !lastName
+    ) {
       return res.status(400).json({ message: "All Field Are Required !!!" });
     }
 
@@ -61,11 +69,11 @@ export const register = async (req, res) => {
       lastName,
       fullName: `${firstName} ${lastName}`,
       providers: [
-    {
-      type: "local",
-      providerId: email, // or user._id later
-    },
-  ],
+        {
+          type: "local",
+          providerId: email, // or user._id later
+        },
+      ],
     });
     return res.sendStatus(204);
   } catch (err) {
@@ -88,10 +96,10 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid Email or Password !!!" });
     }
     if (!user.hashedPassword) {
-  return res.status(400).json({
-    message: "Please login with GitHub/Google",
-  });
-}
+      return res.status(400).json({
+        message: "Please login with GitHub/Google",
+      });
+    }
     const isMatch = await bcrypt.compare(password, user.hashedPassword);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid Email or Password !!!" });
@@ -202,26 +210,32 @@ export const authGithubCallback = async (req, res) => {
     let email = emailRes.data.find((e) => e.primary && e.verified)?.email;
 
     if (!email) {
-      email = `${userRes.data.id}@github.local`; 
+      email = `${userRes.data.id}@github.local`;
     }
     const githubId = userRes.data.id;
 
-// 1. Try find user by providerId
-let user = await User.findOne({
-  providers: {
-    $elemMatch: {
-      type: "github",
-      providerId: githubId,
-    },
-  },
-});
+    let user = await User.findOne({
+      providers: {
+        $elemMatch: {
+          type: "github",
+          providerId: githubId,
+        },
+      },
+    });
+if (user) {
 
-// 2. If not found → try find by email (account linking)
-if (!user) {
-  user = await User.findOne({ email });
+  // initialize providers if missing
+  if (!user.providers) {
+    user.providers = [];
+  }
 
-  if (user) {
-    // 🔗 Link GitHub to existing account
+  const alreadyLinked = user.providers.some(
+    (p) =>
+      p.type === "github" &&
+      p.providerId === githubId
+  );
+
+  if (!alreadyLinked) {
     user.providers.push({
       type: "github",
       providerId: githubId,
@@ -231,43 +245,175 @@ if (!user) {
   }
 }
 
-// 3. If still not found → create new user
-if (!user) {
-  // split name safely
-  let firstName = "";
-  let lastName = "";
+    if (!user) {
+      let firstName = "";
+      let lastName = "";
 
-  if (userRes.data.name) {
-    const parts = userRes.data.name.split(" ");
-    firstName = parts[0];
-    lastName = parts.slice(1).join(" ");
-  }
+      if (userRes.data.name) {
+        const parts = userRes.data.name.split(" ");
+        firstName = parts[0];
+        lastName = parts.slice(1).join(" ");
+      }
 
-  user = await User.create({
-    email,
-    username: userRes.data.login,
-    firstName,
-    lastName,
-    fullName: userRes.data.name || userRes.data.login,
-    avatarUrl: userRes.data.avatar_url,
-    providers: [
-      {
-        type: "github",
-        providerId: githubId,
-      },
-    ],
-  });
-}
+      user = await User.create({
+        email,
+        username: userRes.data.login,
+        firstName,
+        lastName,
+        fullName: userRes.data.name || userRes.data.login,
+        avatarUrl: userRes.data.avatar_url,
+        providers: [
+          {
+            type: "github",
+            providerId: githubId,
+          },
+        ],
+      });
+    }
 
-    // 4. Create tokens
     const accessToken = await createAuthTokens(user, res);
 
-    // 5. Redirect to frontend with token
-    res.redirect(
-      `http://localhost:5173/`
-    );
+    res.redirect(`http://localhost:5173/`);
   } catch (err) {
     console.error(err);
     res.status(500).send("GitHub Auth failed");
+  }
+};
+
+
+//GOOGLE OAUTH
+export const authGoogle = async (req, res) => {
+  try {
+    const redirectUri = process.env.GOOGLE_CALLBACK_URL || "http://localhost:5001/api/auth/google/callback";
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+
+    const state = crypto.randomBytes(16).toString("hex");
+
+    res.cookie("oauth_state", state, { httpOnly: true });
+
+    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=email profile&access_type=offline&prompt=consent&state=${state}`;
+    res.redirect(url);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const authGoogleCallback = async (req, res) => {
+  try {
+    const code = req.query.code;
+
+    // CSRF check
+    if (req.query.state !== req.cookies.oauth_state) {
+      return res.status(403).send("Invalid state");
+    }
+
+    // 1. Exchange code for Google access token
+    const tokenRes = await axios.post(
+      "https://oauth2.googleapis.com/token",
+      {
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: process.env.GOOGLE_CALLBACK_URL,
+        grant_type: "authorization_code",
+        code,
+      },
+      {
+        headers: {
+          Accept: "application/json",
+        },
+      }
+    );
+
+    if (!tokenRes.data.access_token) {
+      return res.status(400).json({
+        message: "Failed to get Google access token",
+        error: tokenRes.data,
+      });
+    }
+
+    const googleAccessToken = tokenRes.data.access_token;
+
+    const userRes = await axios.get(
+      "https://www.googleapis.com/oauth2/v2/userinfo",
+      {
+        headers: {
+          Authorization: `Bearer ${googleAccessToken}`,
+        },
+      }
+    );
+
+    console.log(userRes.data);
+    const googleData = userRes.data;
+
+    const email = googleData.email;
+    const googleId = googleData.id;
+
+    let user = await User.findOne({
+      providers: {
+        $elemMatch: {
+          type: "google",
+          providerId: googleId,
+        },
+      },
+    });
+
+    if (!user) {
+      user = await User.findOne({ email });
+
+      if (user) {
+
+        const alreadyLinked = user.providers.some(
+          (p) =>
+            p.type === "google" &&
+            p.providerId === googleId
+        );
+
+        if (!alreadyLinked) {
+          user.providers.push({
+            type: "google",
+            providerId: googleId,
+          });
+
+          await user.save();
+        }
+      }
+    }
+
+    if (!user) {
+
+      user = await User.create({
+        email,
+        username: email.split("@")[0],
+
+        firstName: googleData.given_name || "",
+        lastName: googleData.family_name || "",
+
+        fullName: googleData.name || "",
+
+        avatarUrl: googleData.picture || "",
+
+        providers: [
+          {
+            type: "google",
+            providerId: googleId,
+          },
+        ],
+      });
+    }
+
+    const accessToken = await createAuthTokens(user, res);
+
+    return res.redirect(
+      `http://localhost:5173/`
+    );
+
+  } catch (err) {
+    console.error(err);
+
+    return res.status(500).json({
+      message: "Google Auth failed",
+      error: err.message,
+    });
   }
 };
