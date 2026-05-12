@@ -45,9 +45,16 @@ const userSchema = new mongoose.Schema(
       type: String,
       sparse: true,
     },
-    isAdmin: {
+    isOnline: {
       type: Boolean,
       default: false,
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    lastSeen:{
+      type: Date,
     },
     providers: [
       {
@@ -66,6 +73,12 @@ const userSchema = new mongoose.Schema(
     timeseries: true,
   },
 );
+// Hash password
+userSchema.pre("save", async function () {
+  if (!this.isModified("hashedPassword")) return;
+
+  this.hashedPassword = await bcrypt.hash(this.hashedPassword, 10);
+});
 
 userSchema.methods.createOTP = function () {
   const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6 digits

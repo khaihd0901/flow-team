@@ -109,7 +109,7 @@ export const login = asyncHandler(async (req, res) => {
     const accessToken = await createAuthTokens(user, res);
     res
       .status(200)
-      .json({ message: "User logged in successfully", accessToken });
+      .json({ message: "User logged in successfully", success: true, accessToken });
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Internal Server Error" });
@@ -345,7 +345,6 @@ export const authGoogleCallback = asyncHandler(async (req, res) => {
       }
     );
 
-    console.log(userRes.data);
     const googleData = userRes.data;
 
     const email = googleData.email;

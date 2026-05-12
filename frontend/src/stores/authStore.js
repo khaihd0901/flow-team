@@ -62,13 +62,14 @@ export const useAuthStore = create()(
             error: false,
           });
 
-          const user = await authService.authLogin(data);
-          if (user) {
+          const res = await authService.authLogin(data);
+          if (res.user) {
             set({ success: true });
-            get().setAccessToken(user.accessToken);
+            get().setAccessToken(res.accessToken);
             await get().authMe();
           }
           toast.success("Login Successful !!!");
+          return res
         } catch (err) {
           set({
             loading: false,

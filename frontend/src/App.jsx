@@ -6,6 +6,7 @@ import Layout from "./components/Layout/Layout";
 import { Toaster } from "sonner";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ForgotPassword from "./pages/ForgotPassword";
+import GuestRoute from "./components/GuestRoute";
 function App() {
   return (
     <>
@@ -13,10 +14,11 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* PUBLIC */}
+          <Route element={<GuestRoute />}>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/reset-password" element={<ForgotPassword />} />
-          
+          </Route>
 
           {/* PRIVATE */}
           <Route element={<ProtectedRoute />}>

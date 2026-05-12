@@ -13,7 +13,7 @@ import {
 
 import { Input } from "@/components/ui/input";
 
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, ArrowLeft } from "lucide-react";
 
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -31,6 +31,8 @@ export function ForgotPasswordForm({ className, ...props }) {
   // 2 => otp
   // 3 => reset password
   const [step, setStep] = useState(1);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // save email + otp for next steps
   const [email, setEmail] = useState("");
@@ -125,12 +127,11 @@ export function ForgotPasswordForm({ className, ...props }) {
         otp,
       });
       if (res.success === true) {
-        
         setOtpSuccess(true);
-        setTimeout(() =>{
+        setTimeout(() => {
           setOTP(otp);
-        setStep(3);
-        },2000)
+          setStep(3);
+        }, 2000);
       }
     } catch (error) {
       console.log(error);
@@ -180,11 +181,10 @@ export function ForgotPasswordForm({ className, ...props }) {
     },
   });
 
-
   // =========================
   // RENDER ERROR
   // =========================
-  const renderError = (formik, fieldName) => {
+  const renderError = (formik, fieldName, hasPasswordToggle = false) => {
     const hasError = formik.touched[fieldName] && formik.errors[fieldName];
 
     if (!hasError) return null;
@@ -192,18 +192,24 @@ export function ForgotPasswordForm({ className, ...props }) {
     return (
       <>
         {/* Desktop Tooltip */}
-        <div className="group absolute right-3 top-1/2 hidden -translate-y-1/2 md:block">
+        <div
+          className={`
+          group absolute top-1/2 hidden
+          -translate-y-1/2 md:block
+          ${hasPasswordToggle ? "right-10" : "right-3"}
+        `}
+        >
           <AlertCircle className="h-5 w-5 cursor-pointer text-destructive" />
 
           <div
             className="
-              absolute right-0 top-7 z-50
-              hidden whitespace-nowrap
-              rounded-md bg-black
-              px-2 py-1 text-xs
-              text-white shadow-lg
-              group-hover:block
-            "
+            absolute right-0 top-7 z-50
+            hidden whitespace-nowrap
+            rounded-md bg-black
+            px-2 py-1 text-xs
+            text-white shadow-lg
+            group-hover:block
+          "
           >
             {formik.errors[fieldName]}
           </div>
@@ -222,6 +228,19 @@ export function ForgotPasswordForm({ className, ...props }) {
         <CardContent className="grid p-0 md:grid-cols-2">
           <div className="p-6 md:p-8">
             <FieldGroup>
+              <button
+                type="button"
+                onClick={() => navigate("/login")}
+                className="
+    mb-2 flex w-fit items-center gap-2
+    text-sm text-muted-foreground
+    transition-colors hover:text-foreground
+  "
+              >
+                <ArrowLeft className="h-4 w-4" />
+
+                <span>Back to Login</span>
+              </button>
               {/* Header */}
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">
@@ -245,8 +264,6 @@ export function ForgotPasswordForm({ className, ...props }) {
               {step === 1 && (
                 <form onSubmit={emailFormik.handleSubmit} className="space-y-6">
                   <Field>
-                    <FieldLabel htmlFor="email">Email</FieldLabel>
-
                     <div className="relative">
                       <Input
                         id="email"
@@ -296,7 +313,7 @@ export function ForgotPasswordForm({ className, ...props }) {
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full"
+                      className="w-full h-10 cursor-pointer"
                       disabled={!canResend || loading}
                       onClick={handleResendOTP}
                     >
@@ -322,7 +339,7 @@ export function ForgotPasswordForm({ className, ...props }) {
                     <div className="relative">
                       <Input
                         id="password"
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         placeholder="Enter new password"
                         onBlur={resetFormik.handleBlur("password")}
                         onChange={resetFormik.handleChange("password")}
@@ -331,13 +348,31 @@ export function ForgotPasswordForm({ className, ...props }) {
                           resetFormik.touched.password &&
                           !!resetFormik.errors.password
                         }
-                        className="pr-10"
+                        className="pr-12"
                       />
 
-                      {renderError(resetFormik, "password")}
+                      {/* SHOW PASSWORD */}
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="
+        absolute right-3 top-1/2
+        -translate-y-1/2
+        text-muted-foreground
+        transition-colors
+        hover:text-foreground
+      "
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </button>
+
+                      {renderError(resetFormik, "password", true)}
                     </div>
                   </Field>
-
                   {/* Confirm Password */}
                   <Field>
                     <FieldLabel htmlFor="confirmPassword">
@@ -347,7 +382,7 @@ export function ForgotPasswordForm({ className, ...props }) {
                     <div className="relative">
                       <Input
                         id="confirmPassword"
-                        type="password"
+                        type={showConfirmPassword ? "text" : "password"}
                         placeholder="Confirm password"
                         onBlur={resetFormik.handleBlur("confirmPassword")}
                         onChange={resetFormik.handleChange("confirmPassword")}
@@ -356,10 +391,29 @@ export function ForgotPasswordForm({ className, ...props }) {
                           resetFormik.touched.confirmPassword &&
                           !!resetFormik.errors.confirmPassword
                         }
-                        className="pr-10"
+                        className="pr-12"
                       />
 
-                      {renderError(resetFormik, "confirmPassword")}
+                      {/* SHOW PASSWORD */}
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword((prev) => !prev)}
+                        className="
+        absolute right-3 top-1/2
+        -translate-y-1/2
+        text-muted-foreground
+        transition-colors
+        hover:text-foreground
+      "
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </button>
+
+                      {renderError(resetFormik, "confirmPassword", true)}
                     </div>
                   </Field>
 
