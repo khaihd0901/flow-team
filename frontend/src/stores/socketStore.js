@@ -4,11 +4,10 @@ import { useAuthStore } from "./authStore";
 import { useChatStore } from "./chatStore";
 
 const baseUrl = import.meta.env.VITE_SOCKET_URL;
-console.log(baseUrl);
 export const useSocketStore = create((set, get) => ({
   socket: null,
   onlineUsers: [],
-  
+
   connectSocket: () => {
     const { socket } = get();
     if (socket?.connected) return;
@@ -20,7 +19,7 @@ export const useSocketStore = create((set, get) => ({
       auth: {
         token: accessToken,
       },
-     transports: ["polling", "websocket"],
+      transports: ["polling", "websocket"],
       autoConnect: true,
       withCredentials: true,
     });
@@ -29,10 +28,10 @@ export const useSocketStore = create((set, get) => ({
       console.log("Socket connected:", newSocket.id);
     });
 
-    newSocket.on('online-users', (userIds) =>{
-      set({onlineUsers: userIds})
-    })
-    newSocket.on("new-message", ({message,conversation,unReadCounts}) =>{
+    newSocket.on("online-users", (userIds) => {
+      set({ onlineUsers: userIds });
+    });
+    newSocket.on("new-message", ({ message, conversation, unReadCounts }) => {
       useChatStore.getState().chatAddMessage(message);
 
       const lastMessage = {
@@ -43,34 +42,37 @@ export const useSocketStore = create((set, get) => ({
           _id: conversation.lastMessage.senderId,
           fullName: "",
           avatarUrl: null,
-        }
+        },
       };
 
       const updatedConver = {
         ...conversation,
         lastMessage,
-        unReadCounts
-      }
+        unReadCounts,
+      };
 
-      if(useChatStore.getState().activeConversationId === message.conversationId){
+      if (
+        useChatStore.getState().activeConversationId === message.conversationId
+      ) {
         useChatStore.getState().chatMarkAsSeen();
       }
 
       useChatStore.getState().chatUpdateConversation(updatedConver);
+    });
 
-
-    })
-
-    newSocket.on("read-message", ({conversation, lastMessage}) =>{
+    newSocket.on("read-message", ({ conversation, lastMessage }) => {
       const updated = {
-        ...conversation,
-        lastMessage
-      }
-newSocket.on("connect_error", (err) => {
-  console.log("Socket connect error:", err.message);
-});
+        _id: conversation._id,
+        lastMessage,
+        lastMessageAt: conversation.lastMessageAt,
+        unReadCounts: conversation.unReadCounts,
+        seenBy: conversation.seenBy
+      };
+      newSocket.on("connect_error", (err) => {
+        console.log("Socket connect error:", err.message);
+      });
       useChatStore.getState().chatUpdateConversation(updated);
-    })
+    });
     set({ socket: newSocket });
   },
 

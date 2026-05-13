@@ -35,7 +35,7 @@ const ChatMessageItem = ({
   return (
     <div
       className={cn(
-        "group flex gap-2 message-bounce",
+        "group flex gap-2 message-bounce mt-1",
         message.isOwn ? "justify-end" : "justify-start",
       )}
     >

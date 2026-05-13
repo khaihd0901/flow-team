@@ -93,6 +93,7 @@ export const sendDirectMessage = asyncHandler(async (req, res) => {
     updateConversationAfterCreateMessage(conversation, message, senderId);
 
     await conversation.save();
+    emitMessage(io,conversation,message)
     return res.status(201).json({
       message
     });
@@ -195,6 +196,7 @@ export const sendGroupMessage = asyncHandler(async (req, res) => {
 
     updateConversationAfterCreateMessage(conversation, message, senderId);
     await conversation.save();
+    emitMessage(io,conversation,message)
 
     return res.status(201).json({message});
   } catch (err) {
@@ -214,7 +216,7 @@ export const getMessagesByConversation = asyncHandler(async (req, res) => {
     const userId = req.user._id;
 
     const { conversationId } = req.params;
-    const limit = Number(req.query.limit) || 50;
+    const limit = Number(req.query.limit) || 20;
     const cursor = req.query.cursor;
 
     // ==========================================
@@ -276,56 +278,6 @@ export const getMessagesByConversation = asyncHandler(async (req, res) => {
     
 
     return res.status(200).json({messages,nextCursor});
-  } catch (err) {
-    console.log(err);
-
-    return res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-});
-
-// ==========================================
-// MARK MESSAGE AS READ
-// ==========================================
-export const markMessageAsRead = asyncHandler(async (req, res) => {
-  try {
-    const userId = req.user._id;
-
-    const { messageId } = req.params;
-
-    const message = await Message.findById(messageId);
-
-    if (!message) {
-      return res.status(404).json({
-        success: false,
-        message: "Message not found",
-      });
-    }
-
-    // avoid duplicate read
-    const alreadyRead = message.readBy.some(
-      (reader) => reader.toString() === userId.toString(),
-    );
-
-    if (!alreadyRead) {
-      const conversation = await Conversation.findById(message.conversation);
-
-      if (conversation) {
-        conversation.unReadCounts.set(userId.toString(), 0);
-
-        await conversation.save();
-      }
-      message.readBy.push(userId);
-
-      await message.save();
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: "Message marked as read",
-    });
   } catch (err) {
     console.log(err);
 

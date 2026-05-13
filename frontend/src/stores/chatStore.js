@@ -28,7 +28,8 @@ export const useChatStore = create()(
       chatGetAllConversations: async () => {
         try {
           set({ loading: true });
-          const {conversations} = await conversationService.getUserConversations();
+          const { conversations } =
+            await conversationService.getUserConversations();
           set({
             conversations,
             loading: false,
@@ -90,48 +91,48 @@ export const useChatStore = create()(
           set({ loading: false });
         }
       },
-      chatSendMessage: async (data) => {
+      chatSendDirectMessage: async (
+        recipientId,
+        content,
+        conversationId,
+        file,
+      ) => {
         try {
           set({ loading: true });
 
-          const res = await messageService.sendMessage(data);
+          const formData = new FormData();
+          formData.append("recipientId", recipientId);
+          formData.append("content", content);
+          if (conversationId) formData.append("conversationId", conversationId);
+          if (file) formData.append("attachments", file);
 
-          const newMessage = res.data;
-          set((state) => ({
-            messages: {
-              ...state.messages,
+          await messageService.sendDirectMessage(formData);
 
-              [newMessage.conversation]: [
-                ...(state.messages[newMessage.conversation] || []),
-
-                newMessage,
-              ],
-            },
-
-            conversations: state.conversations.map((conversation) => {
-              if (conversation._id !== newMessage.conversation) {
-                return conversation;
-              }
-
-              return {
-                ...conversation,
-
-                lastMessage: {
-                  _id: newMessage._id,
-                  content: newMessage.content,
-                  senderId: newMessage.sender?._id,
-                  createdAt: newMessage.createdAt,
-                },
-
-                updatedAt: newMessage.createdAt,
-              };
-            }),
+          set((s) => ({
+            conversations: s.conversations.map((c) =>
+              c._id === conversationId ? { ...c, seenBy: [] } : c,
+            ),
           }));
+        } finally {
+          set({ loading: false });
+        }
+      },
+      chatSendGroupMessage: async (conversationId, content, file) => {
+        try {
+          set({ loading: true });
 
-          return res;
-        } catch (err) {
-          console.log(err);
-          throw err;
+          const formData = new FormData();
+          formData.append("conversationId", conversationId);
+          formData.append("content", content);
+          if (file) formData.append("attachments", file);
+
+          await messageService.sendGroupMessage(formData);
+
+          set((s) => ({
+            conversations: s.conversations.map((c) =>
+              c._id === conversationId ? { ...c, seenBy: [] } : c,
+            ),
+          }));
         } finally {
           set({ loading: false });
         }

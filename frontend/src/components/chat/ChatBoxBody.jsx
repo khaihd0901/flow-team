@@ -14,6 +14,7 @@ const ChatBoxBody = ({ allMessages, selectedConver, activeConversationId }) => {
   const reservedMessages = [...messages].reverse();
   const hasMore = allMessages[activeConversationId]?.hasMore || false;
   const { chatGetAllMessages } = useChatStore();
+
   sessionStorage.setItem(
     key,
     JSON.stringify({
@@ -26,7 +27,7 @@ const ChatBoxBody = ({ allMessages, selectedConver, activeConversationId }) => {
     if (!lastMessage) {
       return;
     }
-    const seenBy = selectedConver?.seenBy || [];
+    const seenBy = selectedConver?.seenBy ?? [];
 
     setLastMessageStatus(seenBy.length > 0 ? "seen" : "sent");
   }, [selectedConver]);
@@ -49,6 +50,19 @@ const ChatBoxBody = ({ allMessages, selectedConver, activeConversationId }) => {
       console.log(error);
     }
   };
+  const handleScrollSave = () => {
+    const container = containerRef.current;
+    if (!container || !activeConversationId) return;
+    const key = `chat-scroll-${activeConversationId}`
+    sessionStorage.setItem(
+      key,
+      JSON.stringify({
+        scrollTop: container.scrollTop,
+        scrollHeight: container.scrollHeight,
+      }),
+    );
+  };
+  
   useLayoutEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -60,18 +74,6 @@ const ChatBoxBody = ({ allMessages, selectedConver, activeConversationId }) => {
       });
     }
   }, [messages.length]);
-  const handleScrollSave = () => {
-    const container = containerRef.current;
-    if (!container || !activeConversationId) return;
-
-    sessionStorage.setItem(
-      key,
-      JSON.stringify({
-        scrollTop: container.scrollTop,
-        scrollHeight: container.scrollHeight,
-      }),
-    );
-  };
   return (
     <div className="bg-primary-foreground h-full flex flex-col overflow-hidden">
       <div
@@ -81,6 +83,9 @@ const ChatBoxBody = ({ allMessages, selectedConver, activeConversationId }) => {
         className="flex flex-col-reverse overflow-y-auto overflow-x-hidden px-3 py-3"
         style={{ height: "400px" }}
       >
+        
+
+        <div ref={messagesEndRef} />
         <InfiniteScroll
           dataLength={reservedMessages.length}
           next={getMoreMessages}
@@ -105,8 +110,6 @@ const ChatBoxBody = ({ allMessages, selectedConver, activeConversationId }) => {
             />
           ))}
         </InfiniteScroll>
-
-        <div ref={messagesEndRef} />
         <div />
       </div>
     </div>

@@ -11,7 +11,7 @@ import mediaRoute from "./Routes/mediaRoute.js"
 import friendRoute from "./Routes/friendRoute.js"
 import conversationRoute from "./Routes/conversationRoute.js"
 import messageRoute from "./Routes/messageRoute.js"
-import {app,io,server} from '../src/socket/index.js'
+import {app,server} from '../src/socket/index.js'
 
 dotenv.config();
 

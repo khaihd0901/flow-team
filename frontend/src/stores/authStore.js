@@ -21,9 +21,10 @@ export const useAuthStore = create()(
           success: false,
           error: false,
         });
+        
+        useChatStore.getState().clearState();
         localStorage.clear();
         sessionStorage.clear();
-        useChatStore.getState().clearState();
       },
       authRegister: async (data) => {
         try {

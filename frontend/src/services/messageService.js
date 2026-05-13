@@ -1,28 +1,36 @@
 import api from "@/libs/api";
 
-const sendMessage = async (data) => {
-  const res = await api.post(
-    "/message/send",
-    data,
-    {
-      headers: {
-        "Content-Type":
-          "multipart/form-data",
-      },
-    }
-  );
+const sendDirectMessage = async (formData) => {
+  const res = await api.post("/message/direct", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 
-  return res.data;
+  return res.data.message;
 };
 
-const getMessagesByConversation = async (conversationId,cursor) => {
-  const res = await api.get(`/message/conversation/${conversationId}/messages?cursor=${cursor}`);
+const sendGroupMessage = async (formData) => {
+  const res = await api.post("/message/group", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 
-  return res.data;
+  return res.data.message;
+};
+
+
+const getMessagesByConversation = async (conversationId, cursor) => {
+  const res = await api.get(
+    `/message/conversation/${conversationId}/messages?cursor=${cursor}`,
+  );
+
+  return { messages: res.data.messages, cursor: res.data.nextCursor };
 };
 
 const markMessageAsRead = async (messageId) => {
-  const res = await api.put(`/message/read/${messageId}`);
+  const res = await api.put(`/conversation/read/${messageId}`);
 
   return res.data;
 };
@@ -39,7 +47,8 @@ const deleteMessage = async (messageId) => {
   return res.data;
 };
 const messageService = {
-  sendMessage,
+  sendDirectMessage,
+  sendGroupMessage,
   getMessagesByConversation,
   markMessageAsRead,
   reactToMessage,

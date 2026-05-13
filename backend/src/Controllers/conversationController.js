@@ -2,7 +2,8 @@ import asyncHandler from "express-async-handler";
 import Conversation from "../Models/Conversation.js";
 import Friend from "../Models/Friend.js";
 import User from "../Models/User.js";
-
+import { io } from '../socket/index.js';
+import { emitMessage,updateConversationAfterCreateMessage } from "../Utils/messageHelper.js";
 // ==========================================
 // CREATE CONVERSATION
 // ==========================================
@@ -43,7 +44,10 @@ export const createConversation = asyncHandler(async (req, res) => {
       // create conversation
       conversation = await Conversation.create({
         type: "group",
-        participants: [{ userId: currentUserId }, ...memberIds.map((id) => ({ userId: id }))],
+        participants: [
+          { userId: currentUserId },
+          ...memberIds.map((id) => ({ userId: id })),
+        ],
         group: {
           name,
         },
@@ -91,8 +95,8 @@ export const getUserConversations = asyncHandler(async (req, res) => {
     })
       .sort({ lastMessageAt: -1, updatedAt: -1 })
       .populate({
-        path: "participants.userId", 
-        select: "fullName avatarUrl"
+        path: "participants.userId",
+        select: "fullName avatarUrl",
       })
       .populate({
         path: "lastMessage.senderId",
@@ -101,14 +105,14 @@ export const getUserConversations = asyncHandler(async (req, res) => {
       .populate({
         path: "seenBy",
         select: "fullName avatarUrl",
-      })
+      });
 
     const formatted = conversations.map((conversation) => {
       const participants = (conversation.participants || []).map((p) => ({
         _id: p.userId?._id,
         fullName: p.userId?.fullName,
         avatarUrl: p.userId?.avatarUrl ?? null,
-        joinedAt: p.joinedAt
+        joinedAt: p.joinedAt,
       }));
       return {
         ...conversation.toObject(),
@@ -131,16 +135,15 @@ export const getUserConversations = asyncHandler(async (req, res) => {
 });
 
 // ==========================================
-// GET SINGLE CONVERSATION
+// MARK MESSAGE AS READ
 // ==========================================
-export const getConversationById = asyncHandler(async (req, res) => {
+export const markConverSationAsSeen = asyncHandler(async (req, res) => {
   try {
     const userId = req.user._id;
+
     const { conversationId } = req.params;
 
-    const conversation = await Conversation.findById(conversationId)
-      .populate("participants", "fullName avatarUrl isOnline lastSeen")
-      .populate("admins", "fullName avatarUrl");
+    const conversation = await Conversation.findById(conversationId).lean();
 
     if (!conversation) {
       return res.status(404).json({
@@ -148,32 +151,53 @@ export const getConversationById = asyncHandler(async (req, res) => {
         message: "Conversation not found",
       });
     }
-
-    const isParticipant = conversation.participants.some(
-      (participant) => participant._id.toString() === userId.toString(),
-    );
-
-    if (!isParticipant) {
-      return res.status(403).json({
+    const last = conversation.lastMessage;
+    if (!last) {
+      return res.status(200).json({
         success: false,
-        message: "You are not a participant of this conversation",
+        message: "Message not exit to mark ass seen",
+      });
+    }
+    if (last.senderId.toString() === userId) {
+      return res.status(200).json({
+        success: false,
+        message: "Sender not need mark ass seen",
       });
     }
 
+    const updated = await Conversation.findByIdAndUpdate(
+      conversationId,
+      {
+        $addToSet: {seenBy: userId},
+        $set: {[`unReadCounts.${userId}`]: 0}
+      },{
+        new: true
+      }
+    )
+    io.to(conversationId).emit("read-message",{
+      conversation: updated,
+      lastMessage:{
+        _id:updated?.lastMessage._id,
+        content: updated?.lastMessage.content,
+        createdAt: updated?.lastMessage.createdAt,
+        sender:{
+          _id: updated?.lastMessage.senderId
+        }
+      }
+    })
     return res.status(200).json({
-      success: true,
-      data: conversation,
+      message: "Message marked as read",
+      seenBy: updated?.seenBy || [],
+      myUnreadCount: updated?.unReadCounts[userId] || 0
     });
   } catch (err) {
     console.log(err);
-
     return res.status(500).json({
       success: false,
       message: err.message,
     });
   }
 });
-
 // ==========================================
 // DELETE CONVERSATION
 // ==========================================
