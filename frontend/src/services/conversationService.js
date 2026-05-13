@@ -1,21 +1,19 @@
 import api from "@/libs/api";
 
 const createPrivateConversation = async (data) => {
-  const res = await api.post("/conversations/private", data);
+  const res = await api.post("/conversation/private", data);
 
   return res.data;
 };
 
 const createGroupConversation = async (data) => {
-  const res = await api.post("/conversations/group", data);
-
+  const res = await api.post("/conversation/group", data);
   return res.data;
 };
 
 const getUserConversations = async () => {
-  const res = await api.get("/conversations");
-
-  return res.data;
+  const res = await api.get("/conversation");
+  return res.data
 };
 
 const getConversationById = async (conversationId) => {

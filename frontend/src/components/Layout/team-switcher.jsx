@@ -25,7 +25,7 @@ export function TeamSwitcher() {
                 size="lg"
                 className="data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground" />
             }>
-                        <div
+              <div
               className="flex aspect-square size-12 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
               <img src="../../../public/favicon.png" alt="" />
             </div>

@@ -1,7 +1,8 @@
 import express from "express";
 
 import {
-  sendMessage,
+  sendGroupMessage,
+  sendDirectMessage,
   getMessagesByConversation,
   markMessageAsRead,
   deleteMessage,
@@ -11,7 +12,6 @@ import {
 import { protectedRoute } from "../Middlewares/authMiddleware.js";
 
 import { upload } from "../Middlewares/mediaMiddleware.js";
-
 
 const router = express.Router();
 
@@ -23,47 +23,17 @@ const router = express.Router();
 // - video
 // - file
 // ==========================================
-router.post(
-  "/send",
-  protectedRoute,
-  upload.array("files", 10),
-  sendMessage
-);
+router.post("/direct", protectedRoute, upload.array("files", 10), sendDirectMessage);
+router.post("/group", protectedRoute, upload.array("files", 10), sendGroupMessage);
 
-// ==========================================
-// GET ALL MESSAGES OF CONVERSATION
-// ==========================================
+
 router.get(
-  "/conversation/:conversationId",
+  "/conversation/:conversationId/messages",
   protectedRoute,
   getMessagesByConversation
 );
-
-// ==========================================
-// MARK MESSAGE AS READ
-// ==========================================
-router.put(
-  "/read/:messageId",
-  protectedRoute,
-  markMessageAsRead
-);
-
-// ==========================================
-// REACT TO MESSAGE
-// ==========================================
-router.put(
-  "/react/:messageId",
-  protectedRoute,
-  reactToMessage
-);
-
-// ==========================================
-// DELETE MESSAGE
-// ==========================================
-router.delete(
-  "/:messageId",
-  protectedRoute,
-  deleteMessage
-);
+router.put("/read/:messageId", protectedRoute, markMessageAsRead);
+router.put("/react/:messageId", protectedRoute, reactToMessage);
+router.delete("/:messageId", protectedRoute, deleteMessage);
 
 export default router;

@@ -14,26 +14,21 @@ const attachmentSchema = new mongoose.Schema(
 
     type: {
       type: String,
-      enum: [
-        "image",
-        "video",
-        "file",
-        "audio",
-      ],
+      enum: ["image", "video", "file", "audio"],
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const messageSchema = new mongoose.Schema(
   {
-    conversation: {
+    conversationId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Conversation",
       required: true,
     },
 
-    sender: {
+    senderId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
@@ -56,20 +51,14 @@ const messageSchema = new mongoose.Schema(
         emoji: String,
       },
     ],
-
-    readBy: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-const Message = mongoose.model(
-  "Message",
-  messageSchema
-);
+messageSchema.index({
+  conversation: 1,
+  createdAt: 1,
+});
+const Message = mongoose.model("Message", messageSchema);
 
 export default Message;

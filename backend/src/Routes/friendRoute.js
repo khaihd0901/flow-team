@@ -18,7 +18,7 @@ router.post("/request", protectedRoute, sendFriendRequest);
 router.put("/accept/:requestId", protectedRoute, acceptFriendRequest);
 router.put("/reject/:requestId", protectedRoute, rejectFriendRequest);
 router.get("/requests", protectedRoute, getFriendRequests);
-router.get("/all", protectedRoute, getAllFriends);
+router.get("/", protectedRoute, getAllFriends);
 router.delete("/remove/:friendId", protectedRoute, removeFriend);
 router.get("/suggestions", protectedRoute, getFriendSuggestions);
 

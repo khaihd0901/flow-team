@@ -16,13 +16,12 @@ const friendSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["pending", "accepted", "rejected", "blocked"],
+      enum: ["pending", "accepted", "rejected"],
       default: "pending",
     },
   },
   { timestamps: true },
 );
-
 friendSchema.index(
   { requester: 1, recipient: 1 },
   { unique: true },

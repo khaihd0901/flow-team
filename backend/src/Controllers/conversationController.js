@@ -4,379 +4,229 @@ import Friend from "../Models/Friend.js";
 import User from "../Models/User.js";
 
 // ==========================================
-// CREATE PRIVATE CONVERSATION
+// CREATE CONVERSATION
 // ==========================================
-export const createPrivateConversation = asyncHandler(
-  async (req, res) => {
-    try {
-      const currentUserId = req.user._id;
-      const { receiverId } = req.body;
+export const createConversation = asyncHandler(async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+    const { memberIds, type, name } = req.body;
 
-      // prevent self chat
-      if (currentUserId.toString() === receiverId) {
-        return res.status(400).json({
-          success: false,
-          message: "You cannot create conversation with yourself",
-        });
-      }
+    if (
+      !type ||
+      (type === "group" && !name) ||
+      !memberIds ||
+      !Array.isArray(memberIds) ||
+      memberIds.length === 0
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Group Name And Member List Are Required" });
+    }
 
-      // check receiver exists
-      const receiver = await User.findById(receiverId);
+    let conversation;
+    if (type === "direct") {
+      const participantId = memberIds[0];
 
-      if (!receiver) {
-        return res.status(404).json({
-          success: false,
-          message: "User not found",
-        });
-      }
-
-      // check friendship
-      const friendship = await Friend.findOne({
-        status: "accepted",
-        $or: [
-          {
-            requester: currentUserId,
-            recipient: receiverId,
-          },
-          {
-            requester: receiverId,
-            recipient: currentUserId,
-          },
-        ],
+      conversation = await Conversation.findOne({
+        type: "direct",
+        "participants.userId": { $all: [currentUserId, participantId] },
       });
-
-      if (!friendship) {
-        return res.status(403).json({
-          success: false,
-          message: "You can only chat with friends",
-        });
-      }
-
-      // check existing conversation
-      let conversation = await Conversation.findOne({
-        type: "private",
-        participants: {
-          $all: [currentUserId, receiverId],
-          $size: 2,
-        },
-      })
-        .populate(
-          "participants",
-          "fullName avatarUrl isOnline"
-        )
-        .populate("lastMessage");
-
-      // already exists
-      if (conversation) {
-        return res.status(200).json({
-          success: true,
-          message: "Conversation already exists",
-          data: conversation,
-        });
-      }
-
       // create conversation
       conversation = await Conversation.create({
-        type: "private",
-        participants: [currentUserId, receiverId],
+        type: "direct",
+        participants: [{ userId: currentUserId }, { userId: participantId }],
+        lastMessageAt: new Date(),
       });
-
-      const populatedConversation =
-        await Conversation.findById(conversation._id)
-          .populate(
-            "participants",
-            "fullName avatarUrl isOnline"
-          );
-
-      return res.status(201).json({
-        success: true,
-        message: "Conversation created successfully",
-        data: populatedConversation,
-      });
-    } catch (err) {
-      console.log(err);
-
-      return res.status(500).json({
-        success: false,
-        message: err.message,
-      });
+      await conversation.save();
     }
-  }
-);
-
-// ==========================================
-// CREATE GROUP CONVERSATION
-// ==========================================
-export const createGroupConversation = asyncHandler(
-  async (req, res) => {
-    try {
-      const currentUserId = req.user._id;
-
-      const {
-        groupName,
-        participants,
-        groupAvatar,
-        description,
-      } = req.body;
-
-      // validation
-      if (!groupName?.trim()) {
-        return res.status(400).json({
-          success: false,
-          message: "Group name is required",
-        });
-      }
-
-      if (
-        !participants ||
-        !Array.isArray(participants)
-      ) {
-        return res.status(400).json({
-          success: false,
-          message: "Participants must be an array",
-        });
-      }
-
-      // include creator automatically
-      const uniqueParticipants = [
-        ...new Set([
-          ...participants,
-          currentUserId.toString(),
-        ]),
-      ];
-
-      // minimum members
-      if (uniqueParticipants.length < 3) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Group conversation must contain at least 3 members",
-        });
-      }
-
-      // check users exist
-      const users = await User.find({
-        _id: { $in: uniqueParticipants },
-      });
-
-      if (users.length !== uniqueParticipants.length) {
-        return res.status(400).json({
-          success: false,
-          message: "Some users do not exist",
-        });
-      }
-
-      // create group
-      const conversation = await Conversation.create({
+    if (type === "group") {
+      // create conversation
+      conversation = await Conversation.create({
         type: "group",
-        groupName,
-        groupAvatar: groupAvatar || "",
-        description: description || "",
-        participants: uniqueParticipants,
-        admins: [currentUserId],
+        participants: [{ userId: currentUserId }, ...memberIds.map((id) => ({ userId: id }))],
+        group: {
+          name,
+        },
+        lastMessageAt: new Date(),
       });
-
-      const populatedConversation =
-        await Conversation.findById(conversation._id)
-          .populate(
-            "participants",
-            "fullName avatarUrl isOnline"
-          )
-          .populate(
-            "admins",
-            "fullName avatarUrl"
-          );
-
-      return res.status(201).json({
-        success: true,
-        message: "Group created successfully",
-        data: populatedConversation,
-      });
-    } catch (err) {
-      console.log(err);
-
-      return res.status(500).json({
-        success: false,
-        message: err.message,
-      });
+      await conversation.save();
     }
-  }
-);
 
+    if (!conversation) {
+      return res.status(400).json({ message: "Invalid Conversation Type !!!" });
+    }
+    await conversation.populate([
+      {
+        path: "participants.userId",
+        select: "fullName, avatarUrl",
+      },
+      {
+        path: "seenBy",
+        select: "fullName, avatarUrl",
+      },
+      {
+        path: "lastMessage.senderId",
+        select: "fullName, avatarUrl",
+      },
+    ]);
+    return res.status(201).json({ conversation });
+  } catch (err) {
+    console.log(err);
+
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+});
 // ==========================================
 // GET USER CONVERSATIONS
 // ==========================================
-export const getUserConversations = asyncHandler(
-  async (req, res) => {
-    try {
-      const userId = req.user._id;
+export const getUserConversations = asyncHandler(async (req, res) => {
+  try {
+    const userId = req.user._id;
 
-      const conversations = await Conversation.find({
-        participants: userId,
+    const conversations = await Conversation.find({
+      "participants.userId": userId,
+    })
+      .sort({ lastMessageAt: -1, updatedAt: -1 })
+      .populate({
+        path: "participants.userId", 
+        select: "fullName avatarUrl"
       })
-        .populate(
-          "participants",
-          "fullName avatarUrl isOnline lastSeen"
-        )
-        .populate(
-          "admins",
-          "fullName avatarUrl"
-        )
-        .populate({
-          path: "lastMessage",
-          populate: {
-            path: "sender",
-            select: "fullName avatarUrl",
-          },
-        })
-        .sort({ updatedAt: -1 });
+      .populate({
+        path: "lastMessage.senderId",
+        select: "fullName avatarUrl",
+      })
+      .populate({
+        path: "seenBy",
+        select: "fullName avatarUrl",
+      })
 
-      const formattedConversations =
-        conversations.map((conversation) => {
-          if (conversation.type === "private") {
-            const otherUser =
-              conversation.participants.find(
-                (participant) =>
-                  participant._id.toString() !==
-                  userId.toString()
-              );
+    const formatted = conversations.map((conversation) => {
+      const participants = (conversation.participants || []).map((p) => ({
+        _id: p.userId?._id,
+        fullName: p.userId?.fullName,
+        avatarUrl: p.userId?.avatarUrl ?? null,
+        joinedAt: p.joinedAt
+      }));
+      return {
+        ...conversation.toObject(),
+        unReadCounts: conversation.unReadCounts || {},
+        participants,
+      };
+    });
 
-            return {
-              ...conversation.toObject(),
-              chatName: otherUser?.fullName,
-              chatAvatar: otherUser?.avatarUrl,
-              otherUser,
-            };
-          }
+    return res.status(200).json({
+      conversations: formatted,
+    });
+  } catch (err) {
+    console.log(err);
 
-          return {
-            ...conversation.toObject(),
-            chatName: conversation.groupName,
-            chatAvatar: conversation.groupAvatar,
-          };
-        });
-
-      return res.status(200).json({
-        success: true,
-        data: formattedConversations,
-      });
-    } catch (err) {
-      console.log(err);
-
-      return res.status(500).json({
-        success: false,
-        message: err.message,
-      });
-    }
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
-);
+});
 
 // ==========================================
 // GET SINGLE CONVERSATION
 // ==========================================
-export const getConversationById = asyncHandler(
-  async (req, res) => {
-    try {
-      const userId = req.user._id;
-      const { conversationId } = req.params;
+export const getConversationById = asyncHandler(async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { conversationId } = req.params;
 
-      const conversation =
-        await Conversation.findById(conversationId)
-          .populate(
-            "participants",
-            "fullName avatarUrl isOnline lastSeen"
-          )
-          .populate(
-            "admins",
-            "fullName avatarUrl"
-          )
-          .populate("lastMessage");
+    const conversation = await Conversation.findById(conversationId)
+      .populate("participants", "fullName avatarUrl isOnline lastSeen")
+      .populate("admins", "fullName avatarUrl");
 
-      if (!conversation) {
-        return res.status(404).json({
-          success: false,
-          message: "Conversation not found",
-        });
-      }
-
-      const isParticipant =
-        conversation.participants.some(
-          (participant) =>
-            participant._id.toString() ===
-            userId.toString()
-        );
-
-      if (!isParticipant) {
-        return res.status(403).json({
-          success: false,
-          message:
-            "You are not a participant of this conversation",
-        });
-      }
-
-      return res.status(200).json({
-        success: true,
-        data: conversation,
-      });
-    } catch (err) {
-      console.log(err);
-
-      return res.status(500).json({
+    if (!conversation) {
+      return res.status(404).json({
         success: false,
-        message: err.message,
+        message: "Conversation not found",
       });
     }
+
+    const isParticipant = conversation.participants.some(
+      (participant) => participant._id.toString() === userId.toString(),
+    );
+
+    if (!isParticipant) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not a participant of this conversation",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: conversation,
+    });
+  } catch (err) {
+    console.log(err);
+
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
-);
+});
 
 // ==========================================
 // DELETE CONVERSATION
 // ==========================================
-export const deleteConversation = asyncHandler(
-  async (req, res) => {
-    try {
-      const userId = req.user._id;
-      const { conversationId } = req.params;
+export const deleteConversation = asyncHandler(async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { conversationId } = req.params;
 
-      const conversation =
-        await Conversation.findById(conversationId);
+    const conversation = await Conversation.findById(conversationId);
 
-      if (!conversation) {
-        return res.status(404).json({
-          success: false,
-          message: "Conversation not found",
-        });
-      }
-
-      const isParticipant =
-        conversation.participants.some(
-          (participant) =>
-            participant.toString() ===
-            userId.toString()
-        );
-
-      if (!isParticipant) {
-        return res.status(403).json({
-          success: false,
-          message: "Unauthorized",
-        });
-      }
-
-      await Conversation.findByIdAndDelete(
-        conversationId
-      );
-
-      return res.status(200).json({
-        success: true,
-        message: "Conversation deleted successfully",
-      });
-    } catch (err) {
-      console.log(err);
-
-      return res.status(500).json({
+    if (!conversation) {
+      return res.status(404).json({
         success: false,
-        message: err.message,
+        message: "Conversation not found",
       });
     }
+
+    const isParticipant = conversation.participants.some(
+      (participant) => participant.toString() === userId.toString(),
+    );
+
+    if (!isParticipant) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    await Conversation.findByIdAndDelete(conversationId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Conversation deleted successfully",
+    });
+  } catch (err) {
+    console.log(err);
+
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
-);
+});
+export const getUserConversationForSocketIo = async (userId) => {
+  try {
+    const conversations = await Conversation.find(
+      { "participants.userId": userId },
+      { _id: 1 },
+    );
+
+    return conversations.map((c) => c._id.toString());
+  } catch (error) {
+    console.log("error when fetch conversation", error);
+    return [];
+  }
+};

@@ -1,8 +1,7 @@
 import express from "express";
 
 import {
-  createPrivateConversation,
-  createGroupConversation,
+  createConversation,
   getUserConversations,
   getConversationById,
   deleteConversation,
@@ -10,52 +9,11 @@ import {
 
 import { protectedRoute } from "../Middlewares/authMiddleware.js";
 
-
 const router = express.Router();
 
-// ==========================================
-// PRIVATE CONVERSATION
-// ==========================================
-router.post(
-  "/private",
-  protectedRoute,
-  createPrivateConversation
-);
-
-// ==========================================
-// GROUP CONVERSATION
-// ==========================================
-router.post(
-  "/group",
-  protectedRoute,
-  createGroupConversation
-);
-
-// ==========================================
-// GET ALL USER CONVERSATIONS
-// ==========================================
-router.get(
-  "/",
-  protectedRoute,
-  getUserConversations
-);
-
-// ==========================================
-// GET SINGLE CONVERSATION
-// ==========================================
-router.get(
-  "/:conversationId",
-  protectedRoute,
-  getConversationById
-);
-
-// ==========================================
-// DELETE CONVERSATION
-// ==========================================
-router.delete(
-  "/:conversationId",
-  protectedRoute,
-  deleteConversation
-);
+router.post("/", protectedRoute, createConversation);
+router.get("/", protectedRoute, getUserConversations);
+router.get("/:conversationId", protectedRoute, getConversationById);
+router.delete("/:conversationId", protectedRoute, deleteConversation);
 
 export default router;
