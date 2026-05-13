@@ -1,20 +1,26 @@
-"use client"
+"use client";
 
-import * as React from "react"
-
-import { NavMain } from "@/components/Layout/nav-main"
-import { NavProjects } from "@/components/Layout/nav-projects"
-import { NavUser } from "@/components/Layout/nav-user"
-import { TeamSwitcher } from "@/components/Layout/team-switcher"
+import * as React from "react";
+import { NavProjects } from "@/components/Layout/nav-projects";
+import { NavUser } from "@/components/Layout/nav-user";
+import { TeamSwitcher } from "@/components/Layout/team-switcher";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
+  SidebarGroupAction,
+  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarRail,
-} from "@/components/ui/sidebar"
-import {TerminalSquareIcon, BotIcon, BookOpenIcon, Settings2Icon, FrameIcon, PieChartIcon, MapIcon } from "lucide-react"
-import { useAuthStore } from "@/stores/authStore"
+} from "@/components/ui/sidebar";
+import { FrameIcon, PieChartIcon, MapIcon } from "lucide-react";
+import { useAuthStore } from "@/stores/authStore";
+import CreateNewGroupChat from "../chat/CreateNewGroupChat";
+import GroupChatList from "../chat/GroupChatList";
+import DirectChatList from "../chat/DirectChatList";
+import AddFriendModel from "../chat/AddFriendModel";
 // This is sample data.
 const data = {
   user: {
@@ -22,139 +28,65 @@ const data = {
     email: "m@example.com",
     avatar: "/avatars/shadcn.jpg",
   },
-  navMain: [
-    {
-      title: "Playground",
-      url: "#",
-      icon: (
-        <TerminalSquareIcon />
-      ),
-      isActive: true,
-      items: [
-        {
-          title: "History",
-          url: "#",
-        },
-        {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Models",
-      url: "#",
-      icon: (
-        <BotIcon />
-      ),
-      items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Documentation",
-      url: "#",
-      icon: (
-        <BookOpenIcon />
-      ),
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: (
-        <Settings2Icon />
-      ),
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
-      ],
-    },
-  ],
   projects: [
     {
       name: "Design Engineering",
       url: "#",
-      icon: (
-        <FrameIcon />
-      ),
+      icon: <FrameIcon />,
     },
     {
       name: "Sales & Marketing",
       url: "#",
-      icon: (
-        <PieChartIcon />
-      ),
+      icon: <PieChartIcon />,
     },
     {
       name: "Travel",
       url: "#",
-      icon: (
-        <MapIcon />
-      ),
+      icon: <MapIcon />,
     },
   ],
-}
+};
 
-export function AppSidebar({
-  ...props
-}) {
-  const {user} = useAuthStore();
+export function AppSidebar({ ...props }) {
+  const { user } = useAuthStore();
   return (
     <Sidebar collapsible="icon" {...props}>
+      {/* header */}
       <SidebarHeader>
         <TeamSwitcher />
       </SidebarHeader>
+      {/* content */}
       <SidebarContent>
+        {/* projects */}
         <NavProjects projects={data.projects} />
-        <NavMain items={data.navMain} />
+
+        {/* group chats */}
+        <SidebarGroup>
+          <SidebarGroupLabel className={"capitalize"}>
+            group chat
+          </SidebarGroupLabel>
+          <SidebarGroupAction>
+            <CreateNewGroupChat />
+          </SidebarGroupAction>
+          <SidebarGroupContent>
+            <GroupChatList />
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* direct chats */}
+        <SidebarGroup>
+          <SidebarGroupLabel className={"capitalize"}>
+            direct chat
+          </SidebarGroupLabel>
+          <SidebarGroupAction>
+            <AddFriendModel />
+          </SidebarGroupAction>
+          <SidebarGroupContent>
+            <DirectChatList />
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
+      {/* footer */}
       <SidebarFooter>
         <NavUser user={user} />
       </SidebarFooter>

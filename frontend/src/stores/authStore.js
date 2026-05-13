@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { toast } from "sonner";
 import authService from "../services/authService";
+import { useChatStore } from "./chatStore";
 export const useAuthStore = create()(
   persist(
     (set, get) => ({
@@ -22,6 +23,7 @@ export const useAuthStore = create()(
         });
         localStorage.clear();
         sessionStorage.clear();
+        useChatStore.getState().clearState();
       },
       authRegister: async (data) => {
         try {
@@ -37,7 +39,7 @@ export const useAuthStore = create()(
             success: true,
             error: false,
           });
-          
+
           toast.success("Register Successful !!!");
         } catch (err) {
           set({
@@ -61,14 +63,17 @@ export const useAuthStore = create()(
             success: false,
             error: false,
           });
-
-          const user = await authService.authLogin(data);
-          if (user) {
+          localStorage.clear();
+          useChatStore.getState().clearState();
+          const res = await authService.authLogin(data);
+          if (res) {
             set({ success: true });
-            get().setAccessToken(user.accessToken);
+            get().setAccessToken(res.accessToken);
             await get().authMe();
+            useChatStore.getState().chatGetAllConversations();
           }
           toast.success("Login Successful !!!");
+          return res;
         } catch (err) {
           set({
             loading: false,
@@ -135,7 +140,7 @@ export const useAuthStore = create()(
           toast.error("Something Went Wrong When Logout");
         }
       },
-      authGitHub: async () =>{
+      authGitHub: async () => {
         try {
           const res = await authService.authGitHub();
           window.location.href = res.url;
@@ -143,7 +148,7 @@ export const useAuthStore = create()(
           console.log(err);
           toast.error("Something Went Wrong When Login With GitHub");
         }
-      }
+      },
     }),
     {
       name: "auth-storage",

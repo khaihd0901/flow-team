@@ -48,8 +48,10 @@ export function LoginForm({ className, ...props }) {
 
     onSubmit: async (values) => {
       try {
-        await authLogin(values);
-        navigate("/");
+        const res = await authLogin(values);
+        if (res.success === true) {
+          navigate("/");
+        }
       } catch (error) {
         console.error(error);
       }
