@@ -10,7 +10,7 @@ import EmojiPiker from "./EmojiPiker";
 const ChatBoxFooter = ({ selectedConver }) => {
   const { user } = useAuthStore();
 
-  const { chatSendMessage } = useChatStore();
+  const { chatSendDirectMessage,chatSendGroupMessage } = useChatStore();
 
   const [value, setValue] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
@@ -36,41 +36,34 @@ const ChatBoxFooter = ({ selectedConver }) => {
   };
 
 const handleSendMessage = async () => {
-  if (!value.trim() && !selectedFile)
-    return;
-
+  if (!value.trim() && !selectedFile) return;
+  const currValue = value;
   try {
-    const formData = new FormData();
+    const isDirect = selectedConver.type === "direct";
 
-    formData.append(
-      "conversationId",
-      selectedConver._id
-    );
+    const conversationId = selectedConver._id;
 
-    formData.append("content", value);
-
-    if (selectedFile) {
-      formData.append(
-        "attachments",
-        selectedFile
-      );
-    }
+    const file = selectedFile || null;
 
     setValue("");
-
-    await chatSendMessage(formData);
 
     setSelectedFile(null);
 
     if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+      fileInputRef.current.currValue = "";
+    }
+
+    if (isDirect) {
+      const participants = selectedConver.participants;
+      const recipient = participants.find((p) => p._id !== user._id);
+
+      await chatSendDirectMessage(recipient._id, currValue, conversationId, file);
+    } else {
+      await chatSendGroupMessage(conversationId, currValue, file);
     }
   } catch (err) {
     console.log(err);
-
-    toast.error(
-      "Failed to send message"
-    );
+    toast.error("Failed to send message");
   }
 };
 

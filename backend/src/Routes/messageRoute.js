@@ -4,7 +4,6 @@ import {
   sendGroupMessage,
   sendDirectMessage,
   getMessagesByConversation,
-  markMessageAsRead,
   deleteMessage,
   reactToMessage,
 } from "../Controllers/messageController.js";
@@ -32,7 +31,6 @@ router.get(
   protectedRoute,
   getMessagesByConversation
 );
-router.put("/read/:messageId", protectedRoute, markMessageAsRead);
 router.put("/react/:messageId", protectedRoute, reactToMessage);
 router.delete("/:messageId", protectedRoute, deleteMessage);
 

@@ -1,10 +1,8 @@
-
 import { X } from "lucide-react";
 import { useChatStore } from "@/stores/chatStore";
 import { useAuthStore } from "@/stores/authStore";
 import UserAvatar from "./UserAvatar";
 import { useSocketStore } from "@/stores/socketStore";
-import StatusBadge from "./StatusBadge";
 import GroupChatAvatar from "./GroupChatAvatar";
 
 const ChatBoxHeader = ({ onCloseChat, chat }) => {
@@ -19,7 +17,6 @@ const ChatBoxHeader = ({ onCloseChat, chat }) => {
 
     if (!user || !otherUser) return;
   }
-  console.log(chat)
   return (
     <div className="flex items-center justify-between border-b px-3 py-3">
       <div className="flex gap-2 items-center">
@@ -31,22 +28,26 @@ const ChatBoxHeader = ({ onCloseChat, chat }) => {
                 name={otherUser?.fullName || "Team FLow"}
                 avatarUrl={otherUser?.avatarUrl || undefined}
               />
-              <StatusBadge
+              {/* <StatusBadge
                 status={
                   onlineUsers.includes(otherUser?._id || "")
                     ? "online"
                     : "offline"
                 }
-              />
+              /> */}
             </>
           ) : (
-            <GroupChatAvatar
-              participants={chat.participants}
-              type={`chat`}
-            />
+            <GroupChatAvatar participants={chat.participants} type={`chat`} />
           )}
         </div>
-        <p className="font-semibold">{otherUser?.fullName || chat.group.name}</p>
+        <div className="flex flex-col">
+          <p className="font-semibold text-sm">
+            {otherUser?.fullName || chat?.group?.name}
+          </p>
+          <span className={`text-sm font-light`}>
+            {onlineUsers.includes(otherUser?._id || "") ? "online" : "offline"}
+          </span>
+        </div>
       </div>
       {/* Close button */}
       <button

@@ -3,8 +3,8 @@ import express from "express";
 import {
   createConversation,
   getUserConversations,
-  getConversationById,
   deleteConversation,
+  markConverSationAsSeen,
 } from "../Controllers/conversationController.js";
 
 import { protectedRoute } from "../Middlewares/authMiddleware.js";
@@ -13,7 +13,7 @@ const router = express.Router();
 
 router.post("/", protectedRoute, createConversation);
 router.get("/", protectedRoute, getUserConversations);
-router.get("/:conversationId", protectedRoute, getConversationById);
+router.put("/read/:conversationId", protectedRoute, markConverSationAsSeen);
 router.delete("/:conversationId", protectedRoute, deleteConversation);
 
 export default router;
