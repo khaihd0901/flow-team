@@ -1,8 +1,9 @@
-import React from 'react'
+import { UserPlus } from 'lucide-react'
+
 
 const CreateNewGroupChat = () => {
   return (
-    <div>CreateNewGroupChat</div>
+      <UserPlus className=''/>
   )
 }
 

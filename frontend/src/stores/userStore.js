@@ -2,11 +2,18 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { toast } from "sonner";
 import userService from "@/services/userService";
+const initialResults = {
+  users: [],
+  projects: [],
+  groupChats: [],
+  // directChats: [],
+};
 export const useUserStore = create()(
   persist((set, get) => ({
     loading: false,
     success: false,
     error: false,
+    searchResults: initialResults,
     clearState: () => {
       set({
         loading: false,
@@ -14,6 +21,12 @@ export const useUserStore = create()(
         error: false,
       });
     },
+     clearSearch: () => {
+    set({
+      searchResults: initialResults,
+      error: null,
+    });
+  },
     userForgotPassword: async (data) => {
       try {
         get().clearState();
@@ -85,5 +98,32 @@ export const useUserStore = create()(
         toast.error(err.response?.data?.message || "Reset failed");
       }
     },
+     userPowerSearch: async (keyword) => {
+    try {
+      set({
+        loading: true,
+        error: null,
+      });
+      const res = await userService.userPowerSearch(keyword);
+      set({
+        searchResults: res.result,
+      });
+    } catch (err) {
+      const message =
+        err.response?.data?.message ||
+        "Search failed";
+
+      set({
+        error: message,
+      });
+
+      toast.error(message);
+    } finally {
+      set({
+        loading: false,
+      });
+    }
+  },
+
   })),
 );

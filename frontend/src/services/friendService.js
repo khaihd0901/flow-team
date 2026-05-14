@@ -4,8 +4,8 @@ import api from "@/libs/api";
 // SEND FRIEND REQUEST
 // ==========================================
 const sendFriendRequest = async (data) => {
-  const res = await api.post("/friends/request", data);
-
+  console.log(data)
+  const res = await api.post("/friend/request", data);
   return res.data;
 };
 
@@ -13,7 +13,7 @@ const sendFriendRequest = async (data) => {
 // ACCEPT FRIEND REQUEST
 // ==========================================
 const acceptFriendRequest = async (requestId) => {
-  const res = await api.put(`/friends/accept/${requestId}`);
+  const res = await api.put(`/friend/accept/${requestId}`);
 
   return res.data;
 };
@@ -22,7 +22,7 @@ const acceptFriendRequest = async (requestId) => {
 // REJECT FRIEND REQUEST
 // ==========================================
 const rejectFriendRequest = async (requestId) => {
-  const res = await api.put(`/friends/reject/${requestId}`);
+  const res = await api.put(`/friend/reject/${requestId}`);
 
   return res.data;
 };
@@ -31,7 +31,7 @@ const rejectFriendRequest = async (requestId) => {
 // GET FRIEND REQUESTS
 // ==========================================
 const getFriendRequests = async () => {
-  const res = await api.get("/friends/requests");
+  const res = await api.get("/friend/requests");
 
   return res.data;
 };
@@ -40,7 +40,7 @@ const getFriendRequests = async () => {
 // GET ALL FRIENDS
 // ==========================================
 const getAllFriends = async () => {
-  const res = await api.get("/friends/all");
+  const res = await api.get("/friend/all");
 
   return res.data;
 };
@@ -49,7 +49,7 @@ const getAllFriends = async () => {
 // REMOVE FRIEND
 // ==========================================
 const removeFriend = async (friendId) => {
-  const res = await api.delete(`/friends/remove/${friendId}`);
+  const res = await api.delete(`/friend/remove/${friendId}`);
 
   return res.data;
 };
@@ -58,7 +58,7 @@ const removeFriend = async (friendId) => {
 // GET FRIEND SUGGESTIONS
 // ==========================================
 const getFriendSuggestions = async () => {
-  const res = await api.get("/friends/suggestions");
+  const res = await api.get("/friend/suggestions");
 
   return res.data;
 };

@@ -13,9 +13,15 @@ const userResetPassword = async (data) =>{
     const res = await api.post(`user/reset-password`, data)
     return res.data
 }
+const userPowerSearch = async (data) =>{
+  const res = await api.get(`user/search?q=${data}`);
+  console.log(res.data)
+  return res.data
+}
 const userService = {
   userForgotPassword,
   userVerifyOTP,
-  userResetPassword
+  userResetPassword,
+  userPowerSearch
 };
 export default userService;

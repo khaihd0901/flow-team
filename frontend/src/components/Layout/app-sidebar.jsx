@@ -14,13 +14,13 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { FrameIcon, PieChartIcon, MapIcon } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import CreateNewGroupChat from "../chat/CreateNewGroupChat";
 import GroupChatList from "../chat/GroupChatList";
 import DirectChatList from "../chat/DirectChatList";
-import AddFriendModel from "../chat/AddFriendModel";
 // This is sample data.
 const data = {
   user: {
@@ -49,6 +49,7 @@ const data = {
 
 export function AppSidebar({ ...props }) {
   const { user } = useAuthStore();
+  const { state } = useSidebar();
   return (
     <Sidebar collapsible="icon" {...props}>
       {/* header */}
@@ -61,30 +62,33 @@ export function AppSidebar({ ...props }) {
         <NavProjects projects={data.projects} />
 
         {/* group chats */}
-        <SidebarGroup>
-          <SidebarGroupLabel className={"capitalize"}>
-            group chat
-          </SidebarGroupLabel>
-          <SidebarGroupAction>
-            <CreateNewGroupChat />
-          </SidebarGroupAction>
-          <SidebarGroupContent>
-            <GroupChatList />
-          </SidebarGroupContent>
-        </SidebarGroup>
-
+        {state !== "collapsed" && (
+          <SidebarGroup>
+            <SidebarGroupLabel className={"capitalize"}>
+              group chat
+            </SidebarGroupLabel>
+            <SidebarGroupAction>
+              <CreateNewGroupChat />
+            </SidebarGroupAction>
+            <SidebarGroupContent>
+              <GroupChatList />
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
         {/* direct chats */}
-        <SidebarGroup>
-          <SidebarGroupLabel className={"capitalize"}>
-            direct chat
-          </SidebarGroupLabel>
-          <SidebarGroupAction>
-            <AddFriendModel />
-          </SidebarGroupAction>
-          <SidebarGroupContent>
-            <DirectChatList />
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {state !== "collapsed" && (
+          <SidebarGroup>
+            <SidebarGroupLabel className={"capitalize"}>
+              direct chat
+            </SidebarGroupLabel>
+            <SidebarGroupAction>
+              {/* <AddFriendModel /> */}
+            </SidebarGroupAction>
+            <SidebarGroupContent>
+              <DirectChatList />
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
       {/* footer */}
       <SidebarFooter>

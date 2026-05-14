@@ -10,8 +10,8 @@ import Conversation from "../Models/Conversation.js";
 export const sendFriendRequest = asyncHandler(async (req, res) => {
   try {
     const requesterId = req.user._id;
-    const { recipientId } = req.body;
-
+    const  {recipientId}  = req.body;
+    
     if (requesterId.toString() === recipientId) {
       return res.status(400).json({
         success: false,

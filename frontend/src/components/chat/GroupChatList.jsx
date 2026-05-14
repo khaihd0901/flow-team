@@ -1,6 +1,6 @@
 
 import { useChatStore } from '@/stores/chatStore'
-import GroupChatCard from './GroupChatCard'
+import GroupChatCard from './GroupChatCard' 
 const GroupChatList = () => {
   const { conversations } = useChatStore()
 
@@ -11,7 +11,7 @@ const GroupChatList = () => {
     <div className='flex-1 overflow-y-auto p-2 space-y-2'>
       {
         groupChats.map((conversation) =>(
-          <GroupChatCard
+            <GroupChatCard
           key={conversation._id}
           conversation={conversation}
           />
