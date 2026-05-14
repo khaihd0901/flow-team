@@ -7,6 +7,7 @@ import bcrypt from "bcrypt";
 import { stat } from "fs";
 import { uploadMedia } from "../Configs/cloudinaryConfig.js";
 import Conversation from "../Models/Conversation.js";
+import Friend from "../Models/Friend.js";
 
 // ============================
 // AUTH ME
@@ -153,9 +154,7 @@ export const getAllUsers = asyncHandler(async (req, res) => {
   const loggedInUserId = req.user._id;
   try {
     const users = await User.find({ _id: { $ne: loggedInUserId } })
-      .select(
-        "username fullName isOnline lastSeen phone bio avatarUrl",
-      )
+      .select("username fullName isOnline lastSeen phone bio avatarUrl")
       .lean();
 
     const userWithConversation = await Promise.all(
@@ -181,3 +180,132 @@ export const getAllUsers = asyncHandler(async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error !!!" });
   }
 });
+
+export const searchUserByName = asyncHandler(async (req, res) => {
+  try {
+    const { fullName } = req.query;
+
+    if (!fullName || !fullName?.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Full name is required",
+      });
+    }
+
+    const users = await User.find({
+      $or: [
+        {
+          fullName: {
+            $regex: fullName,
+            $options: "i",
+          },
+        },
+        {
+          username: {
+            $regex: fullName,
+            $options: "i",
+          },
+        },
+      ],
+    })
+      .select("_id fullName username avatarUrl")
+      .limit(10);
+
+    return res.status(200).json({ users });
+  } catch (err) {
+    console.log(err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error !!!",
+    });
+  }
+});
+
+export const userPowerSearch = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+
+    const { q } = req.query;
+
+    if (!q?.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Query is required",
+      });
+    }
+
+    const keyword = q.trim();
+
+    // SAFE REGEX
+    const regex = new RegExp(
+      keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+      "i",
+    );
+
+    const relationships = await Friend.find({
+      $or: [{ requester: currentUserId }, { recipient: currentUserId }],
+    }).select("requester recipient");
+
+    // EXCLUDED IDS
+    const excludedUserIds = new Set();
+
+    // exclude self
+    excludedUserIds.add(currentUserId.toString());
+
+    // exclude friends / pending users
+    relationships.forEach((rel) => {
+      excludedUserIds.add(rel.requester.toString());
+
+      excludedUserIds.add(rel.recipient.toString());
+    });
+
+    /*
+    =========================================================
+    SEARCH USERS
+    =========================================================
+    */
+
+    const users = await User.find({
+      _id: {
+        $nin: [...excludedUserIds],
+      },
+
+      $or: [{ fullName: regex }, { username: regex }],
+    })
+      .select("fullName username avatarUrl")
+      .limit(10);
+
+    /*
+    =========================================================
+    SEARCH GROUP CHATS
+    =========================================================
+    */
+
+    const groupChats = await Conversation.find({
+      type: "group",
+
+      "group.name": regex,
+
+      // only groups current user joined
+      "participants.userId": currentUserId,
+    })
+      .populate("participants.userId", "fullName avatarUrl")
+      .limit(10);
+    return res.status(200).json({
+      success: true,
+
+      result: {
+        users,
+        groupChats,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};

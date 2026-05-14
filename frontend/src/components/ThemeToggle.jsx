@@ -20,14 +20,12 @@ export default function ThemeToggle() {
         items-center
         justify-center
         overflow-hidden
-        shadow-sm
 
         transition-all
         duration-300
         ease-out
 
         hover:scale-105
-        hover:shadow-md
 
         active:scale-95
       "

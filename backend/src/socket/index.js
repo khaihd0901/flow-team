@@ -26,10 +26,12 @@ io.on("connection", async (socket) => {
   onlineUsers.set(user._id, socket.id);
   io.emit("online-users", Array.from(onlineUsers.keys()));
 
-const conversationIds = await getUserConversationForSocketIo(user._id)
-conversationIds.forEach((id) =>{
+  const conversationIds = await getUserConversationForSocketIo(user._id);
+  conversationIds.forEach((id) => {
     socket.join(id);
-})
+  });
+
+  
   socket.on("disconnect", () => {
     onlineUsers.delete(user._id);
     io.emit("online-users", Array.from(onlineUsers.keys()));

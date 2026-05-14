@@ -23,14 +23,15 @@ export const useSocketStore = create((set, get) => ({
       autoConnect: true,
       withCredentials: true,
     });
-
+    //connect socket
     newSocket.on("connect", () => {
       console.log("Socket connected:", newSocket.id);
     });
-
+    //online user
     newSocket.on("online-users", (userIds) => {
       set({ onlineUsers: userIds });
     });
+    //new message
     newSocket.on("new-message", ({ message, conversation, unReadCounts }) => {
       useChatStore.getState().chatAddMessage(message);
 
@@ -59,7 +60,7 @@ export const useSocketStore = create((set, get) => ({
 
       useChatStore.getState().chatUpdateConversation(updatedConver);
     });
-
+    //reed message
     newSocket.on("read-message", ({ conversation, lastMessage }) => {
       const updated = {
         _id: conversation._id,

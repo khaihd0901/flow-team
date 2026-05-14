@@ -1,85 +1,88 @@
 import ChatBox from "@/components/chat/ChatBox";
-import { createContext, useContext, useState } from "react";
+import { useAuthStore } from "@/stores/authStore";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+
 const ChatContext = createContext();
 
-export const ChatProvider = ({ children }) => {
-  const MAX_VISIBLE = 3;
-  const MAX_OPEN = 5;
-  const [openChatBox, setOpenChatBox] = useState([]);
-  const [visibleChats, setVisibleChats] = useState([]);
+const MAX_CHAT_WINDOWS = 2;
+
+export const ChatProvider = ({
+  children,
+}) => {
+  const {user} = useAuthStore();
+
+  const [openedChats, setOpenedChats] =
+    useState([]);
+
+  /*
+   * OPEN CHAT
+   */
   const openChat = (id) => {
-
-    setOpenChatBox((prev) => {
-      let newOpen = [...prev];
-
-      if (!newOpen.includes(id)) {
-        newOpen.push(id);
+    setOpenedChats((prev) => {
+      // already opened -> move to end
+      if (prev.includes(id)) {
+        return [
+          ...prev.filter((c) => c !== id),
+          id,
+        ];
       }
 
-      if (newOpen.length > MAX_OPEN) {
-        const removed = newOpen.shift();
-
-        setVisibleChats((prevVisible) =>
-          prevVisible.filter((chat) => chat !== removed),
-        );
+      // max 3 chats
+      if (prev.length >= MAX_CHAT_WINDOWS) {
+        return [...prev.slice(1), id];
       }
 
-      return newOpen;
-    });
-
-    setVisibleChats((prev) => {
-      if (prev.includes(id)) return prev;
-
-      let newVisible = [...prev, id];
-
-      if (newVisible.length > MAX_VISIBLE) {
-        newVisible.shift();
-      }
-
-      return newVisible;
+      return [...prev, id];
     });
   };
 
+  /*
+   * CLOSE CHAT
+   */
   const closeChat = (id) => {
-    setOpenChatBox((prev) => prev.filter((chat) => chat !== id));
-
-    setVisibleChats((prev) => {
-      const newVisible = prev.filter((chat) => chat !== id);
-
-      const hiddenChats = openChatBox.filter(
-        (chat) => !newVisible.includes(chat) && chat !== id,
-      );
-
-      if (hiddenChats.length > 0 && newVisible.length < MAX_VISIBLE) {
-        newVisible.unshift(hiddenChats[hiddenChats.length - 1]);
-      }
-
-      return newVisible;
-    });
+    setOpenedChats((prev) =>
+      prev.filter((chatId) => chatId !== id),
+    );
   };
+useEffect(() => {
+  if (!user) {
+    setOpenedChats([]);
+  }
+}, [user]);
   return (
     <ChatContext.Provider
       value={{
+        openedChats,
         openChat,
         closeChat,
       }}
     >
       {children}
 
-<div className="fixed bottom-5 right-5 z-50 flex gap-3">
-  {visibleChats.map((id) => (
-    <div
-      key={id}
-      className="w-[340px] h-100 flex items-center justify-center"
-    >
-      <ChatBox
-        onClose={() => closeChat(id)}
-      />
-    </div>
-  ))}
-</div>
+      {/* CHAT WINDOWS */}
+      <div className="fixed bottom-5 right-5 z-50 flex items-end gap-4">
+        {openedChats.map((chatId) => (
+          <div
+            key={chatId}
+            className="h-[450px] w-[340px]"
+          >
+            <ChatBox
+              conversationId={chatId}
+              onClose={() =>
+                closeChat(chatId)
+              }
+            />
+          </div>
+        ))}
+      </div>
     </ChatContext.Provider>
   );
 };
 
-export const useChat = () => useContext(ChatContext);
+export const useChat = () =>
+  useContext(ChatContext);

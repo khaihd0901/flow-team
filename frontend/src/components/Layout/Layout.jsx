@@ -1,11 +1,4 @@
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+
 import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
@@ -15,6 +8,8 @@ import {
 import { Outlet } from "react-router";
 import { AppSidebar } from "./app-sidebar";
 import ThemeToggle from "../ThemeToggle";
+import NotificationBell from "../NotificationBell";
+import UserSearch from "../search/UserSearch";
 
 export default function Page() {
   return (
@@ -28,26 +23,19 @@ export default function Page() {
               orientation="vertical"
               className="mr-2 data-[orientation=vertical]:h-4"
             />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    Build Your Application
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Data Fetching</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
+            {/* User search */}
+            <UserSearch/>
           </div>
-          <div className="ml-auto px-3">
-            
+          <div className="flex gap-1 ml-auto px-3">
+            <NotificationBell
+              count={1}
+              hasNew={false}
+              onClick={() => console.log("open notifications")} /*  */
+            />
             <ThemeToggle />
           </div>
         </header>
-        
+
         <Outlet />
       </SidebarInset>
     </SidebarProvider>
