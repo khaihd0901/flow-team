@@ -35,7 +35,7 @@ export default function SearchResult({
       <div
         className="
           overflow-hidden
-          rounded-2xl
+          rounded-xl
           border
           bg-background
           shadow-xl

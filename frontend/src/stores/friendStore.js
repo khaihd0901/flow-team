@@ -8,7 +8,7 @@ export const useFriendStore = create((set, get) => ({
   friends: [],
 
   requests: [],
-
+sentRequests: [],
   suggestions: [],
 
   loading: false,
@@ -71,7 +71,31 @@ export const useFriendStore = create((set, get) => ({
       });
     }
   },
+  // =====================================
+  // GET FRIEND REQUESTS
+  // =====================================
+  getSentFriendRequests: async () => {
+    try {
+      set({
+        loading: true,
+        error: null,
+      });
 
+      const res = await friendService.getSentFriendRequests();
+
+      set({
+        sentRequests: res.requests,
+        loading: false,
+      });
+    } catch (err) {
+      console.log(err);
+
+      set({
+        loading: false,
+        error: err.response?.data?.message,
+      });
+    }
+  },
   // =====================================
   // ACCEPT FRIEND REQUEST
   // =====================================

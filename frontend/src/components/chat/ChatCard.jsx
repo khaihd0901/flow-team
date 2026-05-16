@@ -6,20 +6,22 @@ const ChatCard = ({
   conversationId,
   name,
   timestamp,
-  isActive,
   onSelect,
   unreadCount,
   leftSection,
   subtitle,
+  setOpen
 }) => {
   return (
     <Card
       key={conversationId}
       className={cn(
-        "border-none p-3 cursor-pointer transition-all glass hover:bg-muted",
-        isActive && "ring-1 ring-primary/40 bg-muted",
+        "border-none p-3 cursor-pointer transition-all bg-sidebar hover:bg-muted"
       )}
-      onClick={() => onSelect(conversationId)}
+      onClick={() => {
+        onSelect(conversationId)
+        setOpen(false)
+      }}
     >
       <div className="flex items-center gap-3">
         <div className="relative">{leftSection}</div>

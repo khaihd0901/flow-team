@@ -20,7 +20,6 @@ import { FrameIcon, PieChartIcon, MapIcon } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import CreateNewGroupChat from "../chat/CreateNewGroupChat";
 import GroupChatList from "../chat/GroupChatList";
-import DirectChatList from "../chat/DirectChatList";
 // This is sample data.
 const data = {
   user: {
@@ -75,20 +74,7 @@ export function AppSidebar({ ...props }) {
             </SidebarGroupContent>
           </SidebarGroup>
         )}
-        {/* direct chats */}
-        {state !== "collapsed" && (
-          <SidebarGroup>
-            <SidebarGroupLabel className={"capitalize"}>
-              direct chat
-            </SidebarGroupLabel>
-            <SidebarGroupAction>
-              {/* <AddFriendModel /> */}
-            </SidebarGroupAction>
-            <SidebarGroupContent>
-              <DirectChatList />
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
+
       </SidebarContent>
       {/* footer */}
       <SidebarFooter>

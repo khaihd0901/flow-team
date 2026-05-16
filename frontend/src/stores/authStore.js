@@ -73,7 +73,7 @@ export const useAuthStore = create()(
             get().setAccessToken(res.accessToken);
             await get().authMe();
             useChatStore.getState().chatGetAllConversations();
-            // useFriendStore.getState().getFriendRequests();
+            useFriendStore.getState().getSentFriendRequests();
           }
           toast.success("Login Successful !!!");
           return res;

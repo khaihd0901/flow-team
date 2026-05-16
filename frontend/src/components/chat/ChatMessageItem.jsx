@@ -23,8 +23,13 @@ const ChatMessageItem = ({
       new Date(prev?.createdAt || 0).getTime() >
       300000;
 
-  const participant = selectedConver.participants.find(
-    (p) => p._id?.toString() === message.senderId._id?.toString(),
+  const senderId =
+  message?.senderId?._id || message?.senderId;
+
+const participant =
+  selectedConver?.participants?.find(
+    (p) =>
+      p?._id?.toString() === senderId?.toString(),
   );
 
   const handleReact = (emoji) => {
@@ -32,6 +37,7 @@ const ChatMessageItem = ({
 
     console.log("React:", emoji, message._id);
   };
+  console.log(participant)
   return (
     <div
       className={cn(
@@ -45,8 +51,8 @@ const ChatMessageItem = ({
           {isGroupBreak && (
             <UserAvatar
               type="chat"
-              name={participant?.fullName || "User"}
-              avatarUrl={participant?.avatarUrl || undefined}
+              name={participant.fullName || "User"}
+              avatarUrl={participant.avatarUrl || undefined}
             />
           )}
         </div>
@@ -84,7 +90,7 @@ const ChatMessageItem = ({
         {/* MESSAGE */}
         <Card
           className={cn(
-            "relative p-3 transition-all duration-200",
+            "relative p-3 transition-all duration-200 ring-1",
             message.isOwn
               ? "chat-bubble-sent border-0"
               : "bg-chat-bubble-received",
