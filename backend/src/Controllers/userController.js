@@ -244,6 +244,7 @@ export const userPowerSearch = async (req, res) => {
     );
 
     const relationships = await Friend.find({
+      status: "accepted",
       $or: [{ requester: currentUserId }, { recipient: currentUserId }],
     }).select("requester recipient");
 

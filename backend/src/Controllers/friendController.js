@@ -11,7 +11,7 @@ export const sendFriendRequest = asyncHandler(async (req, res) => {
   try {
     const requesterId = req.user._id;
     const  {recipientId}  = req.body;
-    
+
     if (requesterId.toString() === recipientId) {
       return res.status(400).json({
         success: false,
@@ -181,7 +181,28 @@ export const getFriendRequests = asyncHandler(async (req, res) => {
     });
   }
 });
+export const getSentFriendRequests = asyncHandler(async (req, res) => {
+  try {
+    const userId = req.user._id;
+console.log(userId)
+    const requests = await Friend.find({
+      requester: userId,
+      status: "pending",
+    })
+      .sort({ createdAt: -1 });
 
+    return res.status(200).json({
+      requests
+    });
+  } catch (err) {
+    console.log(err);
+
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+});
 // ==========================================
 // GET ALL FRIENDS
 // ==========================================

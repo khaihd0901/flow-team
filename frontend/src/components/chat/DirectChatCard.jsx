@@ -8,12 +8,11 @@ import { useSocketStore } from "@/stores/socketStore";
 import { useChatStore } from "@/stores/chatStore";
 import { useChat } from "@/Contexts/chatContext";
 
-const DirectChatCard = ({ conversation }) => {
+const DirectChatCard = ({ conversation,setOpen }) => {
   const { user } = useAuthStore();
   const { onlineUsers } = useSocketStore();
 
   const {
-    activeConversationId,
     setActiveConversationId,
     messages,
     chatGetAllMessages,
@@ -45,6 +44,7 @@ const DirectChatCard = ({ conversation }) => {
 
   return (
     <ChatCard
+    setOpen={setOpen}
       conversationId={conversation._id}
       name={otherParticipant.fullName}
       timestamp={
@@ -52,7 +52,6 @@ const DirectChatCard = ({ conversation }) => {
           ? new Date(conversation.lastMessage.createdAt)
           : undefined
       }
-      isActive={activeConversationId === conversation._id}
       onSelect={handleSelectConversation}
       unreadCount={unreadCount}
       leftSection={

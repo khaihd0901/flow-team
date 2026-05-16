@@ -35,7 +35,13 @@ const getFriendRequests = async () => {
 
   return res.data;
 };
-
+// ==========================================
+// GET SENT FRIEND REQUESTS
+// ==========================================
+const getSentFriendRequests = async () => {
+  const res = await api.get("/friend/sent-requests");
+  return res.data;
+};
 // ==========================================
 // GET ALL FRIENDS
 // ==========================================
@@ -68,6 +74,7 @@ const friendService = {
   acceptFriendRequest,
   rejectFriendRequest,
   getFriendRequests,
+  getSentFriendRequests,
   getAllFriends,
   removeFriend,
   getFriendSuggestions,

@@ -1,7 +1,7 @@
 
 import { useChatStore } from '@/stores/chatStore'
 import DirectChatCard from './DirectChatCard'
-const DirectChatList = () => {
+const DirectChatList = ({setOpen}) => {
   const { conversations } = useChatStore()
   if(!conversations) return
 
@@ -12,6 +12,7 @@ const DirectChatList = () => {
       {
         directChats.map((conversation) =>(
           <DirectChatCard
+          setOpen={setOpen}
           key={conversation._id}
           conversation={conversation}
           />

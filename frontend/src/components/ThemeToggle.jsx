@@ -1,34 +1,15 @@
-import { useThemeStore } from "@/stores/themeStore";
 import { Moon, Sun } from "lucide-react";
+import { useThemeStore } from "@/stores/themeStore";
+import IconButton from "./IconButton";
 
 export default function ThemeToggle() {
   const { isDark, toggleTheme } = useThemeStore();
 
   return (
-    <button
+    <IconButton
       onClick={toggleTheme}
-      aria-label="Toggle Theme"
-      className="
-        relative
-        w-10
-        h-10
-        rounded-xl
-        border
-        border-border
-        bg-card
-        flex
-        items-center
-        justify-center
-        overflow-hidden
-
-        transition-all
-        duration-300
-        ease-out
-
-        hover:scale-105
-
-        active:scale-95
-      "
+      ariaLabel="Toggle Theme"
+      className="hidden md:flex"
     >
       {/* Sun */}
       <div
@@ -65,6 +46,6 @@ export default function ThemeToggle() {
       >
         <Moon className="w-5 h-5 text-primary" />
       </div>
-    </button>
+    </IconButton>
   );
 }
