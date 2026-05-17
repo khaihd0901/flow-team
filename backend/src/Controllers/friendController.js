@@ -1,8 +1,9 @@
-
+import { io } from "../socket/index.js";
 import asyncHandler from "express-async-handler";
 import Friend from "../Models/Friend.js";
 import User from "../Models/User.js";
 import Conversation from "../Models/Conversation.js";
+import { emitFriendRequest } from "../Utils/notificationHelper.js";
 
 // ==========================================
 // SEND FRIEND REQUEST
@@ -10,7 +11,7 @@ import Conversation from "../Models/Conversation.js";
 export const sendFriendRequest = asyncHandler(async (req, res) => {
   try {
     const requesterId = req.user._id;
-    const  {recipientId}  = req.body;
+    const { recipientId } = req.body;
 
     if (requesterId.toString() === recipientId) {
       return res.status(400).json({
@@ -54,6 +55,18 @@ export const sendFriendRequest = asyncHandler(async (req, res) => {
       status: "pending",
     });
 
+    io.to(recipientId.toString()).emit("new-friend-request", {
+      _id: friendRequest._id,
+      type: "friend",
+      user: {
+        _id: req.user._id,
+        fullName: req.user.fullName,
+        avatarUrl: req.user.avatarUrl,
+      },
+      content: "sent you a friend request",
+      unread: true,
+      time: "Just now",
+    });
     return res.status(201).json({
       success: true,
       message: "Friend request sent successfully",
@@ -68,7 +81,51 @@ export const sendFriendRequest = asyncHandler(async (req, res) => {
     });
   }
 });
+// ==========================================
+// CANCEL FRIEND REQUEST
+// ==========================================
+export const cancelFriendRequest = asyncHandler(async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { requestId } = req.params;
 
+    const friendRequest = await Friend.findById(requestId);
+
+    if (!friendRequest) {
+      return res.status(404).json({
+        success: false,
+        message: "Friend request not found",
+      });
+    }
+
+    if (friendRequest.requester.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+
+    await Friend.findByIdAndDelete(requestId);
+
+    const recipientId = friendRequest.recipient.toString();
+    io.to(recipientId).emit("cancel-friend-request", {
+      requestId: friendRequest._id.toString(),
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Friend request canceled successfully",
+    });
+  } catch (err) {
+    console.log(err);
+
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+});
 // ==========================================
 // ACCEPT FRIEND REQUEST
 // ==========================================
@@ -184,15 +241,13 @@ export const getFriendRequests = asyncHandler(async (req, res) => {
 export const getSentFriendRequests = asyncHandler(async (req, res) => {
   try {
     const userId = req.user._id;
-console.log(userId)
     const requests = await Friend.find({
       requester: userId,
       status: "pending",
-    })
-      .sort({ createdAt: -1 });
+    }).sort({ createdAt: -1 });
 
     return res.status(200).json({
-      requests
+      requests,
     });
   } catch (err) {
     console.log(err);
@@ -212,10 +267,7 @@ export const getAllFriends = asyncHandler(async (req, res) => {
 
     const friends = await Friend.find({
       status: "accepted",
-      $or: [
-        { requester: userId },
-        { recipient: userId },
-      ],
+      $or: [{ requester: userId }, { recipient: userId }],
     })
       .populate("requester", "fullName avatarUrl isOnline lastSeen")
       .populate("recipient", "fullName avatarUrl isOnline lastSeen")
@@ -301,10 +353,7 @@ export const getFriendSuggestions = asyncHandler(async (req, res) => {
     const userId = req.user._id;
 
     const friendships = await Friend.find({
-      $or: [
-        { requester: userId },
-        { recipient: userId },
-      ],
+      $or: [{ requester: userId }, { recipient: userId }],
     });
 
     const excludedUserIds = friendships.flatMap((friend) => [

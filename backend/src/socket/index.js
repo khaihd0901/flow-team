@@ -21,22 +21,44 @@ const onlineUsers = new Map();
 
 io.on("connection", async (socket) => {
   const user = socket.user;
-  console.log(`${user.fullName} online with socket id: ${socket.id}`);
 
-  onlineUsers.set(user._id, socket.id);
-  io.emit("online-users", Array.from(onlineUsers.keys()));
+  console.log(
+    `${user.fullName} online with socket id: ${socket.id}`
+  );
 
-  const conversationIds = await getUserConversationForSocketIo(user._id);
+  // join personal room
+  socket.join(user._id.toString());
+
+  console.log(
+    "JOIN USER ROOM:",
+    user._id.toString()
+  );
+
+  onlineUsers.set(user._id.toString(), socket.id);
+
+  io.emit(
+    "online-users",
+    Array.from(onlineUsers.keys())
+  );
+
+  const conversationIds =
+    await getUserConversationForSocketIo(user._id);
+
   conversationIds.forEach((id) => {
-    socket.join(id);
+    socket.join(id.toString());
   });
 
-  
   socket.on("disconnect", () => {
-    onlineUsers.delete(user._id);
-    io.emit("online-users", Array.from(onlineUsers.keys()));
+    onlineUsers.delete(user._id.toString());
 
-    console.log(`${user.fullName} disconnected with socket id: ${socket.id}`);
+    io.emit(
+      "online-users",
+      Array.from(onlineUsers.keys())
+    );
+
+    console.log(
+      `${user.fullName} disconnected with socket id: ${socket.id}`
+    );
   });
 });
 

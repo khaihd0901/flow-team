@@ -8,6 +8,7 @@ import {
   removeFriend,
   getSentFriendRequests,
   getFriendSuggestions,
+  cancelFriendRequest,
 } from "../Controllers/friendController.js";
 
 import { protectedRoute } from "../Middlewares/authMiddleware.js";
@@ -23,6 +24,8 @@ router.get("/sent-requests", protectedRoute, getSentFriendRequests);
 
 router.get("/", protectedRoute, getAllFriends);
 router.delete("/remove/:friendId", protectedRoute, removeFriend);
+router.delete("/request/cancel:requestId", protectedRoute, cancelFriendRequest);
+
 router.get("/suggestions", protectedRoute, getFriendSuggestions);
 
 export default router;

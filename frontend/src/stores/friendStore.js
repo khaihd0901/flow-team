@@ -44,6 +44,35 @@ sentRequests: [],
 
       toast.error(err.response?.data?.message);
     }
+  },  // =====================================
+  // CANCEL FRIEND REQUEST
+  // =====================================
+  cancelFriendRequest: async (requestId) => {
+    try {
+      set({
+        loading: true,
+        error: null,
+      });
+
+      const res = await friendService.cancelFriendRequest(requestId);
+
+      set({
+        loading: false,
+      });
+
+      toast.success(res.message);
+
+      return res;
+    } catch (err) {
+      console.log(err);
+
+      set({
+        loading: false,
+        error: err.response?.data?.message,
+      });
+
+      toast.error(err.response?.data?.message);
+    }
   },
 
   // =====================================
@@ -57,7 +86,7 @@ sentRequests: [],
       });
 
       const res = await friendService.getFriendRequests();
-
+      console.log(res)
       set({
         requests: res.data,
         loading: false,

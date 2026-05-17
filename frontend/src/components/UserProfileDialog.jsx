@@ -1,22 +1,81 @@
+import { useEffect, useState } from "react";
+import {
+  Loader2,
+  UserPlus,
+  UserRoundX,
+} from "lucide-react";
+
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 import UserAvatar from "./chat/UserAvatar";
 import { useFriendStore } from "@/stores/friendStore";
-import { UserPlus, UserRoundX } from "lucide-react";
 
-export default function UserProfileDialog({ open, onOpenChange, user }) {
+export default function UserProfileDialog({
+  open,
+  onOpenChange,
+  user,
+}) {
   const {
     sendFriendRequest,
-    loading: friendLoading,
+    cancelFriendRequest,
+    getSentFriendRequests,
     sentRequests,
   } = useFriendStore();
+
+  const [loadingAction, setLoadingAction] = useState(false);
+
+  useEffect(() => {
+    const loadRequests = async () => {
+      try {
+        await getSentFriendRequests();
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    if (open) {
+      loadRequests();
+    }
+  }, [open, getSentFriendRequests]);
+
   if (!user) return null;
-  const isRequested = sentRequests?.some(
+
+  const request = sentRequests?.find(
     (request) => request.recipient === user._id,
   );
-  const handleAddFriend = async (id) => {
-    await sendFriendRequest({ recipientId: id });
+
+  const isRequested = !!request;
+
+  const handleAddFriend = async () => {
+    try {
+      setLoadingAction(true);
+
+      await sendFriendRequest({
+        recipientId: user._id,
+      });
+
+      await getSentFriendRequests();
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoadingAction(false);
+    }
   };
+
+  const handleCancelRequest = async () => {
+    try {
+      setLoadingAction(true);
+
+      await cancelFriendRequest(request._id);
+
+      await getSentFriendRequests();
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoadingAction(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -65,7 +124,7 @@ export default function UserProfileDialog({ open, onOpenChange, user }) {
               flex
               items-center
               gap-2
-              rounded-lg  
+              rounded-lg
               bg-primary
               px-4
               py-2
@@ -76,10 +135,19 @@ export default function UserProfileDialog({ open, onOpenChange, user }) {
               hover:opacity-90
               disabled:opacity-50
             "
-            disabled={friendLoading}
-            onClick={() => handleAddFriend(user._id)}
+            disabled={loadingAction}
+            onClick={
+              isRequested
+                ? handleCancelRequest
+                : handleAddFriend
+            }
           >
-            {isRequested ? (
+            {loadingAction ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Loading...</span>
+              </>
+            ) : isRequested ? (
               <>
                 <UserRoundX className="h-5 w-5" />
                 <span>Cancel Friend Request</span>

@@ -3,7 +3,6 @@ import { persist } from "zustand/middleware";
 import { toast } from "sonner";
 import authService from "../services/authService";
 import { useChatStore } from "./chatStore";
-import { useFriendStore } from "./friendStore";
 export const useAuthStore = create()(
   persist(
     (set, get) => ({
@@ -73,7 +72,6 @@ export const useAuthStore = create()(
             get().setAccessToken(res.accessToken);
             await get().authMe();
             useChatStore.getState().chatGetAllConversations();
-            useFriendStore.getState().getSentFriendRequests();
           }
           toast.success("Login Successful !!!");
           return res;
