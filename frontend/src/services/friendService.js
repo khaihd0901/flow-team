@@ -4,17 +4,21 @@ import api from "@/libs/api";
 // SEND FRIEND REQUEST
 // ==========================================
 const sendFriendRequest = async (data) => {
-  console.log(data)
   const res = await api.post("/friend/request", data);
   return res.data;
 };
-
+// ==========================================
+// SEND FRIEND REQUEST
+// ==========================================
+const cancelFriendRequest = async (requestId) => {
+  const res = await api.delete(`/friend/request/cancel${requestId}`);
+  return res.data;
+};
 // ==========================================
 // ACCEPT FRIEND REQUEST
 // ==========================================
 const acceptFriendRequest = async (requestId) => {
   const res = await api.put(`/friend/accept/${requestId}`);
-
   return res.data;
 };
 
@@ -23,7 +27,6 @@ const acceptFriendRequest = async (requestId) => {
 // ==========================================
 const rejectFriendRequest = async (requestId) => {
   const res = await api.put(`/friend/reject/${requestId}`);
-
   return res.data;
 };
 
@@ -32,7 +35,6 @@ const rejectFriendRequest = async (requestId) => {
 // ==========================================
 const getFriendRequests = async () => {
   const res = await api.get("/friend/requests");
-
   return res.data;
 };
 // ==========================================
@@ -78,6 +80,7 @@ const friendService = {
   getAllFriends,
   removeFriend,
   getFriendSuggestions,
+  cancelFriendRequest
 };
 
 export default friendService;

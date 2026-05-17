@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { io } from "socket.io-client";
 import { useAuthStore } from "./authStore";
 import { useChatStore } from "./chatStore";
+import { useNotificationStore } from "./notificationStore";
 
 const baseUrl = import.meta.env.VITE_SOCKET_URL;
 export const useSocketStore = create((set, get) => ({
@@ -67,12 +68,20 @@ export const useSocketStore = create((set, get) => ({
         lastMessage,
         lastMessageAt: conversation.lastMessageAt,
         unReadCounts: conversation.unReadCounts,
-        seenBy: conversation.seenBy
+        seenBy: conversation.seenBy,
       };
       newSocket.on("connect_error", (err) => {
         console.log("Socket connect error:", err.message);
       });
       useChatStore.getState().chatUpdateConversation(updated);
+    });
+    //new friend request
+    newSocket.on("new-friend-request", (notification) => {
+      useNotificationStore.getState().addNotification(notification);
+      console.log(useNotificationStore.getState().notifications);
+    });
+    newSocket.on("cancel-friend-request", ({ requestId }) => {
+      useNotificationStore.getState().removeNotification(requestId);
     });
     set({ socket: newSocket });
   },

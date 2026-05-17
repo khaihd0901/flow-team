@@ -1,5 +1,4 @@
 import { Bell, BellRing } from "lucide-react";
-import { useState } from "react";
 import IconButton from "../IconButton";
 
 export default function NotificationBell({
@@ -7,7 +6,6 @@ export default function NotificationBell({
   hasNew = false,
   onClick,
 }) {
-  const [pressed, setPressed] = useState(false);
 
   return (
     <IconButton
@@ -38,22 +36,11 @@ export default function NotificationBell({
 
       {/* Active Bell */}
       <div
-        onMouseDown={() => setPressed(true)}
-        onMouseUp={() => setPressed(false)}
-        onMouseLeave={() => setPressed(false)}
         className={`
           absolute
           transition-all
           duration-500
           ease-[cubic-bezier(0.34,1.56,0.64,1)]
-
-          ${
-            hasNew
-              ? "scale-100 rotate-0 opacity-100"
-              : "scale-0 -rotate-90 opacity-0"
-          }
-
-          ${pressed ? "animate-bounce" : ""}
         `}
       >
         <BellRing className="w-5 h-5 text-primary" />

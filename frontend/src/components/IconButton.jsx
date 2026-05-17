@@ -4,7 +4,6 @@ export default function IconButton({
   className = "",
   ariaLabel,
   glow = false,
-  ping = false,
   badge,
 }) {
   return (
@@ -87,27 +86,6 @@ export default function IconButton({
         >
           {badge > 99 ? "99+" : badge}
         </div>
-      )}
-
-      {/* Ping */}
-      {ping && (
-        <span
-          className="
-            absolute
-            w-6
-            h-6
-            rounded-lg
-            border
-            border-primary/40
-
-            animate-ping
-
-            top-1/2
-            left-1/2
-            -translate-x-1/2
-            -translate-y-1/2
-          "
-        />
       )}
     </button>
   );

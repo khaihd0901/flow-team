@@ -11,7 +11,6 @@ export default function ChatIconButton({
       onClick={onClick}
       ariaLabel="Messages"
       glow={hasNew}
-      ping={hasNew}
       badge={count}
     >
       {/* Idle */}

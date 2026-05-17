@@ -87,7 +87,7 @@ export default function Page() {
             <div ref={notificationRef} className="relative">
               <NotificationBell
                 count={1}
-                hasNew={false}
+                hasNew={true}
                 onClick={() => setOpenNotification((prev) => !prev)}
               />
 
@@ -99,7 +99,7 @@ export default function Page() {
             <div ref={chatRef} className="relative">
               <ChatIconButton
                 count={1}
-                hasNew={false}
+                hasNew={true}
                 onClick={() => setOpenChat((prev) => !prev)}
               />
 
