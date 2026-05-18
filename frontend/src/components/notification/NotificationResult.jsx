@@ -1,8 +1,18 @@
-import { Bell, CheckCheck, Heart, MessageCircle, UserPlus } from "lucide-react";
+import {
+  Bell,
+  CheckCheck,
+  Heart,
+  UserPlus,
+  Users,
+  FolderKanban,
+} from "lucide-react";
 
 import UserAvatar from "../chat/UserAvatar";
+import FriendRequestNoti from "./FriendRequestNoti";
+
 import { useNotificationStore } from "@/stores/notificationStore";
 import { useFriendStore } from "@/stores/friendStore";
+
 const NotificationResult = ({ open }) => {
   const notifications = useNotificationStore((state) => state.notifications);
 
@@ -12,26 +22,55 @@ const NotificationResult = ({ open }) => {
 
   const { acceptFriendRequest, rejectFriendRequest } = useFriendStore();
 
-  const handleAccept = async (id) => {
+  // ==========================================
+  // ACCEPT FRIEND REQUEST
+  // ==========================================
+  const handleAccept = async (requestId, notificationId) => {
     try {
-      await acceptFriendRequest(id);
+      await acceptFriendRequest(requestId);
 
-      removeNotification(id);
+      removeNotification(notificationId);
     } catch (err) {
       console.log(err);
     }
   };
 
-  const handleReject = async (id) => {
+  // ==========================================
+  // REJECT FRIEND REQUEST
+  // ==========================================
+  const handleReject = async (requestId, notificationId) => {
     try {
-      await rejectFriendRequest(id);
+      await rejectFriendRequest(requestId);
 
-      removeNotification(id);
+      removeNotification(notificationId);
     } catch (err) {
       console.log(err);
     }
   };
+
   const hasNotifications = notifications?.length > 0;
+
+  // ==========================================
+  // ICONS
+  // ==========================================
+  const renderIcon = (type) => {
+    switch (type) {
+      case "FRIEND_REQUEST":
+        return <UserPlus className="size-3 text-primary" />;
+
+      case "REACTION":
+        return <Heart className="size-3 text-primary" />;
+
+      case "GROUP_INVITE":
+        return <Users className="size-3 text-primary" />;
+
+      case "PROJECT_INVITE":
+        return <FolderKanban className="size-3 text-primary" />;
+
+      default:
+        return <Bell className="size-3 text-primary" />;
+    }
+  };
 
   return (
     <div
@@ -124,21 +163,18 @@ const NotificationResult = ({ open }) => {
         {hasNotifications ? (
           <div className="max-h-[420px] overflow-y-auto py-2">
             {notifications.map((notification) => (
-              <button
-                key={notification.id}
+              <div
+                key={notification._id}
                 className="
                   group
                   relative
 
                   flex
-                  w-full
                   items-start
                   gap-3
 
                   px-4
                   py-3
-
-                  text-left
 
                   transition-all
                   duration-200
@@ -146,8 +182,8 @@ const NotificationResult = ({ open }) => {
                   hover:bg-muted/50
                 "
               >
-                {/* UNREAD */}
-                {notification.unread && (
+                {/* UNREAD DOT */}
+                {!notification.isRead && (
                   <span
                     className="
                       absolute
@@ -166,8 +202,8 @@ const NotificationResult = ({ open }) => {
                 {/* AVATAR */}
                 <div className="relative shrink-0">
                   <UserAvatar
-                    avatarUrl={notification.user.avatarUrl}
-                    alt={notification.user.fullName}
+                    avatarUrl={notification.senderId?.avatarUrl}
+                    alt={notification.senderId?.fullName}
                     className="
                       h-11
                       w-11
@@ -194,17 +230,7 @@ const NotificationResult = ({ open }) => {
                       bg-background
                     "
                   >
-                    {notification.type === "friend" && (
-                      <UserPlus className="size-3 text-primary" />
-                    )}
-
-                    {notification.type === "message" && (
-                      <MessageCircle className="size-3 text-primary" />
-                    )}
-
-                    {notification.type === "reaction" && (
-                      <Heart className="size-3 text-primary" />
-                    )}
+                    {renderIcon(notification.type)}
                   </div>
                 </div>
 
@@ -212,87 +238,54 @@ const NotificationResult = ({ open }) => {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm leading-relaxed">
                     <span className="font-semibold">
-                      {notification.user.fullName}
+                      {notification.senderId?.fullName}
                     </span>{" "}
                     <span className="text-muted-foreground">
                       {notification.content}
                     </span>
                   </p>
 
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {notification.time}
-                  </p>
-                  {/* FRIEND REQUEST ACTIONS */}
-                  {notification.type === "friend" && (
-                    <div className="mt-3 flex items-center gap-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAccept(notification._id);
-                        }}
-                        className="
-          rounded-md
-          bg-primary
-          px-3
-          py-1.5
-          text-xs
-          rounded-xl
-          font-medium
-          text-primary-foreground
-          transition-opacity
-          hover:opacity-90
-        "
-                      >
-                        Accept
-                      </button>
+                  <p className="mt-1 text-xs text-muted-foreground">Just now</p>
 
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleReject(notification._id);
-                        }}
-                        className="
-          rounded-xl
-          border
-          px-3
-          py-1.5
-          text-xs
-          font-medium
-          transition-colors
-          hover:bg-muted
-        "
-                      >
-                        Decline
-                      </button>
-                    </div>
+                  {/* FRIEND REQUEST ACTIONS */}
+                  {notification.type === "FRIEND_REQUEST" && (
+                    <FriendRequestNoti
+                      notification={notification}
+                      onAccept={() =>
+                        handleAccept(notification.entityId, notification._id)
+                      }
+                      onReject={() =>
+                        handleReject(notification.entityId, notification._id)
+                      }
+                    />
                   )}
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         ) : (
           <div
             className="
-      flex
-      flex-col
-      items-center
-      justify-center
-      gap-3
-      px-6
-      py-14
-      text-center
-    "
+              flex
+              flex-col
+              items-center
+              justify-center
+              gap-3
+              px-6
+              py-14
+              text-center
+            "
           >
             <div
               className="
-        flex
-        h-14
-        w-14
-        items-center
-        justify-center
-        rounded-full
-        bg-primary/10
-      "
+                flex
+                h-14
+                w-14
+                items-center
+                justify-center
+                rounded-full
+                bg-primary/10
+              "
             >
               <Bell className="size-7 text-primary" />
             </div>
@@ -302,10 +295,10 @@ const NotificationResult = ({ open }) => {
 
               <p
                 className="
-          mt-1
-          text-xs
-          text-muted-foreground
-        "
+                  mt-1
+                  text-xs
+                  text-muted-foreground
+                "
               >
                 When someone sends you a message or friend request, it will
                 appear here.
