@@ -1,27 +1,22 @@
 import { useEffect, useState } from "react";
-import {
-  Loader2,
-  UserPlus,
-  UserRoundX,
-} from "lucide-react";
+import { Loader2, UserPlus, UserRoundX } from "lucide-react";
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 import UserAvatar from "./chat/UserAvatar";
 import { useFriendStore } from "@/stores/friendStore";
+import { useNotificationStore } from "@/stores/notificationStore";
 
-export default function UserProfileDialog({
-  open,
-  onOpenChange,
-  user,
-}) {
+export default function UserProfileDialog({ open, onOpenChange, user }) {
   const {
     sendFriendRequest,
     cancelFriendRequest,
     getSentFriendRequests,
     sentRequests,
   } = useFriendStore();
-
+  const removeNotification = useNotificationStore(
+    (state) => state.removeNotification,
+  );
   const [loadingAction, setLoadingAction] = useState(false);
 
   useEffect(() => {
@@ -136,11 +131,7 @@ export default function UserProfileDialog({
               disabled:opacity-50
             "
             disabled={loadingAction}
-            onClick={
-              isRequested
-                ? handleCancelRequest
-                : handleAddFriend
-            }
+            onClick={isRequested ? handleCancelRequest : handleAddFriend}
           >
             {loadingAction ? (
               <>

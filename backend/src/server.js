@@ -9,6 +9,7 @@ import authRoute from "./Routes/authRoute.js"
 import userRoute from "./Routes/userRoute.js"
 import mediaRoute from "./Routes/mediaRoute.js"
 import friendRoute from "./Routes/friendRoute.js"
+import notificationRoute from "./Routes/notificationRoute.js"
 import conversationRoute from "./Routes/conversationRoute.js"
 import messageRoute from "./Routes/messageRoute.js"
 import {app,server} from '../src/socket/index.js'
@@ -40,7 +41,7 @@ app.use('/api/media', mediaRoute)
 app.use('/api/friend', friendRoute)
 app.use('/api/conversation', conversationRoute)
 app.use('/api/message', messageRoute)
-
+app.use("/api/notification", notificationRoute);
 
 app.use(errorHandler);
 

@@ -1,96 +1,168 @@
 import { create } from "zustand";
 import { io } from "socket.io-client";
+
 import { useAuthStore } from "./authStore";
 import { useChatStore } from "./chatStore";
 import { useNotificationStore } from "./notificationStore";
 
 const baseUrl = import.meta.env.VITE_SOCKET_URL;
+
 export const useSocketStore = create((set, get) => ({
   socket: null,
   onlineUsers: [],
 
+  // ==========================================
+  // CONNECT SOCKET
+  // ==========================================
   connectSocket: () => {
-    const { socket } = get();
-    if (socket?.connected) return;
+    const existingSocket = get().socket;
+
+    // prevent duplicate connections
+    if (existingSocket?.connected) return;
 
     const accessToken = useAuthStore.getState().accessToken;
+
     if (!accessToken) return;
 
-    const newSocket = io(baseUrl, {
+    const socket = io(baseUrl, {
       auth: {
         token: accessToken,
       },
-      transports: ["polling", "websocket"],
-      autoConnect: true,
+
+      transports: ["websocket", "polling"],
+
       withCredentials: true,
+      autoConnect: true,
     });
-    //connect socket
-    newSocket.on("connect", () => {
-      console.log("Socket connected:", newSocket.id);
+
+    // ==========================================
+    // CONNECT
+    // ==========================================
+    socket.on("connect", () => {
+      console.log("✅ Socket connected:", socket.id);
     });
-    //online user
-    newSocket.on("online-users", (userIds) => {
-      set({ onlineUsers: userIds });
+
+    // ==========================================
+    // CONNECT ERROR
+    // ==========================================
+    socket.on("connect_error", (err) => {
+      console.log("❌ Socket connect error:", err.message);
     });
-    //new message
-    newSocket.on("new-message", ({ message, conversation, unReadCounts }) => {
+
+    // ==========================================
+    // ONLINE USERS
+    // ==========================================
+    socket.on("online-users", (userIds) => {
+      set({
+        onlineUsers: userIds,
+      });
+    });
+
+    // ==========================================
+    // NEW MESSAGE
+    // ==========================================
+    socket.on("new-message", ({ message, conversation, unReadCounts }) => {
+      const activeConversationId = useChatStore.getState().activeConversationId;
+
+      // add realtime message
       useChatStore.getState().chatAddMessage(message);
 
       const lastMessage = {
         _id: conversation.lastMessage._id,
+
         content: conversation.lastMessage.content,
+
         createdAt: conversation.lastMessage.createdAt,
+
         sender: {
           _id: conversation.lastMessage.senderId,
+
           fullName: "",
           avatarUrl: null,
         },
       };
 
-      const updatedConver = {
+      const updatedConversation = {
         ...conversation,
         lastMessage,
         unReadCounts,
       };
 
-      if (
-        useChatStore.getState().activeConversationId === message.conversationId
-      ) {
+      // if current conversation opened
+      if (activeConversationId === message.conversationId) {
         useChatStore.getState().chatMarkAsSeen();
       }
 
-      useChatStore.getState().chatUpdateConversation(updatedConver);
+      // update sidebar conversation
+      useChatStore.getState().chatUpdateConversation(updatedConversation);
     });
-    //reed message
-    newSocket.on("read-message", ({ conversation, lastMessage }) => {
-      const updated = {
+
+    // ==========================================
+    // READ MESSAGE
+    // ==========================================
+    socket.on("read-message", ({ conversation, lastMessage }) => {
+      const updatedConversation = {
         _id: conversation._id,
+
         lastMessage,
+
         lastMessageAt: conversation.lastMessageAt,
+
         unReadCounts: conversation.unReadCounts,
+
         seenBy: conversation.seenBy,
       };
-      newSocket.on("connect_error", (err) => {
-        console.log("Socket connect error:", err.message);
-      });
-      useChatStore.getState().chatUpdateConversation(updated);
+
+      useChatStore.getState().chatUpdateConversation(updatedConversation);
     });
-    //new friend request
-    newSocket.on("new-friend-request", (notification) => {
+
+    // ==========================================
+    // NEW REQUEST NOTIFICATION
+    // ==========================================
+    socket.on("friend-request:new", (notification) => {
+      console.log(notification)
       useNotificationStore.getState().addNotification(notification);
-      console.log(useNotificationStore.getState().notifications);
     });
-    newSocket.on("cancel-friend-request", ({ requestId }) => {
-      useNotificationStore.getState().removeNotification(requestId);
+
+    // ==========================================
+    // NOTIFICATION REMOVED
+    // ==========================================
+    socket.on("notification:remove", ({ notificationId }) => {
+      useNotificationStore.getState().removeNotification(notificationId);
     });
-    set({ socket: newSocket });
+
+    // ==========================================
+    // FRIEND REQUEST CANCELLED
+    // ==========================================
+    socket.on("friend-request:cancelled", ({ notificationId }) => {
+      useNotificationStore.getState().removeNotification(notificationId);
+    });
+
+    // ==========================================
+    // SAVE SOCKET
+    // ==========================================
+    set({
+      socket,
+    });
   },
 
+  // ==========================================
+  // DISCONNECT SOCKET
+  // ==========================================
   disconnectSocket: () => {
     const socket = get().socket;
+
     if (socket) {
+      socket.removeAllListeners();
+
       socket.disconnect();
-      set({ socket: null });
+
+      console.log("🔌 Socket disconnected");
+
+      set({
+        socket: null,
+        onlineUsers: [],
+      });
     }
   },
 }));
